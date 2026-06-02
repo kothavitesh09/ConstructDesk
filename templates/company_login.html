@@ -1,0 +1,34 @@
+{% extends "auth_base.html" %}
+{% block auth_page_class %}company-login-page{% endblock %}
+{% block content %}
+<div class="auth-heading premium-auth-heading">
+  <h1>Company Login</h1>
+  <span>Access your projects, sales, inventory, finance, customers, and reports.</span>
+</div>
+<form method="post" class="auth-form premium-login-form">
+  <label>
+    Email
+    <input required type="text" name="email" autocomplete="email">
+  </label>
+  <label>
+    Password
+    <input required type="password" name="password" autocomplete="current-password">
+  </label>
+  <button class="btn btn-primary premium-signin w-100" type="submit">
+    <i class="bi bi-box-arrow-in-right"></i>
+    Sign In to ERP
+  </button>
+</form>
+<a class="company-register-card" href="{{ url_for('auth.register_company') }}">
+  <i class="bi bi-building-add"></i>
+  <strong>Create Company Account</strong>
+</a>
+<div class="tenant-note">
+  <strong>New Company Registration</strong>
+  <span>Create your company workspace. Your account will be reviewed and approved by the platform administrator before activation.</span>
+</div>
+<a class="super-admin-link" href="{{ url_for('auth.super_admin_login') }}">
+  <i class="bi bi-shield-lock"></i>
+  Super Admin Sign In
+</a>
+{% endblock %}

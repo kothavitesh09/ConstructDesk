@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Finance</p><h1>Sales Report</h1></div><button class="btn btn-light btn-sm" onclick="window.print()"><i class="bi bi-download"></i> Export</button></div>
+<div class="stat-grid three">
+  <article class="stat-card"><div><span>Total Sales</span><strong>&#8377;{{ "{:,.0f}".format(totals.gross) }}</strong><em class="trend-chip"><i class="bi bi-arrow-up-right"></i> Gross</em></div><i class="bi bi-bar-chart"></i></article>
+  <article class="stat-card"><div><span>Collections</span><strong>&#8377;{{ "{:,.0f}".format(totals.paid) }}</strong><em class="trend-chip"><i class="bi bi-check2"></i> Paid</em></div><i class="bi bi-cash"></i></article>
+  <article class="stat-card"><div><span>Pending Dues</span><strong>&#8377;{{ "{:,.0f}".format(totals.due) }}</strong><em class="trend-chip"><i class="bi bi-clock"></i> Due</em></div><i class="bi bi-clock-history"></i></article>
+</div>
+<div class="panel mt-3"><div class="table-responsive"><table class="table table-sm erp-table data-table"><thead><tr><th>Flat</th><th>Tower</th><th>Rate/SFT</th><th>Gross</th><th>Paid</th><th>Due</th></tr></thead><tbody>{% for b in bookings %}<tr><td>{{ b.flat_no }}</td><td>{{ b.tower }}</td><td>&#8377;{{ "{:,.0f}".format(b.rate_per_sft or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.gross_amount or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.paid_amount or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.due_amount or 0) }}</td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

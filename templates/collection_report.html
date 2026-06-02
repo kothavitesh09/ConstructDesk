@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Finance</p><h1>Collection Report</h1></div><button class="btn btn-light btn-sm" onclick="window.print()"><i class="bi bi-download"></i> Export</button></div>
+<div class="summary-card mb-3"><div><span>Total Collections</span><strong>&#8377;{{ "{:,.0f}".format(total) }}</strong></div><div><span>Receipt Count</span><strong>{{ receipts|length }}</strong></div></div>
+<div class="panel"><div class="table-responsive"><table class="table table-sm erp-table data-table"><thead><tr><th>Receipt No</th><th>Date</th><th>Customer</th><th>Flat</th><th>Mode</th><th class="text-end">Amount</th><th></th></tr></thead><tbody>{% for r in receipts %}<tr><td>{{ r.receipt_no }}</td><td>{{ r.date }}</td><td>{{ r.customer_name }}</td><td>{{ r.flat_no }}</td><td>{{ r.payment_mode }}</td><td class="text-end">&#8377;{{ "{:,.0f}".format(r.amount or 0) }}</td><td><a class="btn btn-light btn-sm" href="{{ url_for('finance.receipt_pdf', receipt_id=r._id) }}"><i class="bi bi-filetype-pdf"></i></a></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

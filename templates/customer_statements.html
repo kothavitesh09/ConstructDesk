@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Finance</p><h1>Customer Statements</h1></div>
+</div>
+<form method="get" class="panel filter-bar">
+  <input name="q" class="form-control form-control-sm" placeholder="Search customer, flat, tower" value="{{ q }}">
+  <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Search</button>
+</form>
+<div class="panel mt-3">
+  <div class="table-responsive">
+    <table class="table table-sm erp-table data-table">
+      <thead><tr><th>Customer</th><th>Flat</th><th>Tower</th><th>Gross Amount</th><th>Paid Amount</th><th>Due Amount</th><th></th></tr></thead>
+      <tbody>
+        {% for booking in bookings %}
+        <tr>
+          <td>{{ booking.customer_name }}</td>
+          <td>{{ booking.flat_no }}</td>
+          <td>{{ booking.tower }}</td>
+          <td>&#8377;{{ "{:,.0f}".format(booking.gross_amount or 0) }}</td>
+          <td>&#8377;{{ "{:,.0f}".format(booking.paid_amount or 0) }}</td>
+          <td>&#8377;{{ "{:,.0f}".format(booking.due_amount or 0) }}</td>
+          <td><a class="btn btn-light btn-sm" href="{{ url_for('finance.customer_statement', booking_id=booking._id) }}"><i class="bi bi-file-text"></i> Generate Statement</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

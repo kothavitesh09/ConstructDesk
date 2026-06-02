@@ -1,0 +1,31 @@
+<header class="topbar">
+  <button class="icon-btn mobile-menu" id="mobileMenu" title="Open menu"><i class="bi bi-list"></i></button>
+  {% if current_user and current_user.role != 'super_admin' %}
+  <div class="project-select">
+    <span class="topbar-icon"><i class="bi bi-building"></i></span>
+    <form method="post" action="{{ url_for('auth.switch_project') }}">
+    <select class="form-select form-select-sm" name="project_id" aria-label="Project selector" onchange="this.form.submit()">
+      <option value="">Current Project</option>
+      {% for project in tenant_projects %}
+      <option value="{{ project._id }}" {{ 'selected' if active_project and active_project._id == project._id }}>{{ project.name }}</option>
+      {% endfor %}
+    </select>
+    </form>
+  </div>
+  {% endif %}
+  <div class="global-search">
+    <i class="bi bi-search"></i>
+    <input type="search" id="globalSearch" placeholder="Search flat, customer, receipt">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+  <button class="icon-btn notification-btn" title="Notifications"><i class="bi bi-bell"></i><span></span></button>
+  <div class="dropdown">
+    <button class="profile-chip dropdown-toggle" data-bs-toggle="dropdown">
+      <span class="avatar">A</span><span class="profile-name">Admin</span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><span class="dropdown-item-text">{{ current_user.name if current_user else 'Admin' }}</span></li>
+      <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+    </ul>
+  </div>
+</header>

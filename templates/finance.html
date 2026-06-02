@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Finance</p><h1>Finance Workspace</h1></div></div>
+<div class="workspace-grid">
+  <a class="workspace-card" href="{{ url_for('finance.due_statements') }}"><i class="bi bi-list-check"></i><strong>Due Statements</strong><span>Gross, paid, GST, corpus and TDS view</span></a>
+  <a class="workspace-card" href="{{ url_for('finance.customer_statements') }}"><i class="bi bi-file-text"></i><strong>Customer Statements</strong><span>Cost, collection, dues and bank account statements</span></a>
+  <a class="workspace-card" href="{{ url_for('finance.sales_report') }}"><i class="bi bi-graph-up-arrow"></i><strong>Sales Reports</strong><span>Project and tower sales summary</span></a>
+  <a class="workspace-card" href="{{ url_for('finance.collection_report') }}"><i class="bi bi-wallet2"></i><strong>Collection Reports</strong><span>Date and customer-wise receipt totals</span></a>
+</div>
+{% endblock %}

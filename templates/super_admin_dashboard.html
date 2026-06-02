@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head compact-command-head">
+  <div>
+    <p class="dashboard-subtitle">Platform administration</p>
+    <h1>Super Admin</h1>
+  </div>
+</div>
+
+<section class="compact-kpi-grid">
+  <article class="compact-kpi-card"><span>Total Companies</span><strong>{{ stats.total_companies }}</strong></article>
+  <article class="compact-kpi-card"><span>Pending</span><strong>{{ stats.pending_companies }}</strong></article>
+  <article class="compact-kpi-card"><span>Total Projects</span><strong>{{ stats.total_projects }}</strong></article>
+  <article class="compact-kpi-card"><span>Total Users</span><strong>{{ stats.total_users }}</strong></article>
+</section>
+
+<section class="panel">
+  <div class="compact-panel-title">Company Registrations</div>
+  <div class="table-responsive">
+    <table class="table table-sm erp-table">
+      <thead><tr><th>Company</th><th>Owner</th><th>Email</th><th>Phone</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+      <tbody>
+        {% for company in companies %}
+        <tr>
+          <td>{{ company.company_name }}</td>
+          <td>{{ company.owner_name }}</td>
+          <td>{{ company.email }}</td>
+          <td>{{ company.phone }}</td>
+          <td><span class="status-badge {{ company.status }}">{{ company.status|title }}</span></td>
+          <td class="text-end">
+            <form class="inline-action-form" method="post" action="{{ url_for('super_admin.update_company_status', company_id=company._id, status='active') }}"><button class="btn btn-sm btn-light">Approve</button></form>
+            <form class="inline-action-form" method="post" action="{{ url_for('super_admin.update_company_status', company_id=company._id, status='rejected') }}"><button class="btn btn-sm btn-light">Reject</button></form>
+            <form class="inline-action-form" method="post" action="{{ url_for('super_admin.update_company_status', company_id=company._id, status='suspended') }}"><button class="btn btn-sm btn-light">Suspend</button></form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">No companies found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="compact-panel-title">Subscriptions</div>
+  <div class="empty-mini">Subscription management is ready for plan, billing, and renewal fields.</div>
+</section>
+{% endblock %}

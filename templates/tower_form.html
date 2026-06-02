@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Masters</p><h1>Towers Setup</h1></div></div>
+<form method="post" class="panel compact-form">
+  <div class="row g-3">
+    <div class="col-md-5"><label class="form-label">Project</label><select required name="project_id" class="form-select">{% for p in projects %}<option value="{{ p._id }}">{{ p.name }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label">Tower Name</label><input required name="name" class="form-control" placeholder="A"></div>
+    <div class="col-md-3"><label class="form-label">Number of Floors</label><input required name="floors" type="number" min="1" class="form-control"></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-primary">Save Tower</button></div>
+</form>
+{% endblock %}

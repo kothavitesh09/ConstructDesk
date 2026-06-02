@@ -1,0 +1,19 @@
+{% extends "auth_base.html" %}
+{% block content %}
+<div class="auth-heading">
+  <p>Secure company onboarding</p>
+  <h1>Choose your access path</h1>
+</div>
+<div class="auth-choice-grid">
+  <a class="auth-choice" href="{{ url_for('auth.register_company') }}">
+    <i class="bi bi-building-add"></i>
+    <strong>Create Company Account</strong>
+    <span>Submit a new company for Super Admin approval.</span>
+  </a>
+  <a class="auth-choice" href="{{ url_for('auth.super_admin_login') }}">
+    <i class="bi bi-shield-lock"></i>
+    <strong>Super Admin Sign In</strong>
+    <span>Approve, suspend, and manage platform companies.</span>
+  </a>
+</div>
+{% endblock %}

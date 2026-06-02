@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Setup</p><h1>Masters</h1></div></div>
+<div class="workspace-grid">
+  <a class="workspace-card" href="{{ url_for('masters.projects') }}"><i class="bi bi-kanban"></i><strong>Projects</strong><span>Project setup, towers and inventory patterns</span></a>
+  <a class="workspace-card" href="{{ url_for('masters.cost_sheet_master') }}"><i class="bi bi-file-earmark-spreadsheet"></i><strong>Cost Sheet</strong><span>Global charges, GST, notes and payment schedule template</span></a>
+  <a class="workspace-card" href="{{ url_for('masters.company_details') }}"><i class="bi bi-building-gear"></i><strong>Company Details</strong><span>Company profile, addresses, bank accounts and report settings</span></a>
+</div>
+<div class="panel mt-3">
+  <div class="panel-title">Projects</div>
+  <div class="table-responsive"><table class="table table-sm erp-table"><thead><tr><th>Name</th><th>Area</th><th>Duration</th></tr></thead><tbody>{% for p in projects %}<tr><td>{{ p.name }}</td><td>{{ p.area }}</td><td>{{ p.duration }}</td></tr>{% endfor %}</tbody></table></div>
+</div>
+{% endblock %}

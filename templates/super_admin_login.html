@@ -1,0 +1,14 @@
+{% extends "auth_base.html" %}
+{% block auth_page_class %}super-admin-login-page{% endblock %}
+{% block content %}
+<div class="auth-heading">
+  <p>Platform control</p>
+  <h1>Super Admin Sign In</h1>
+</div>
+<form method="post" class="auth-form">
+  <label>User ID<input required type="text" name="user_id" autocomplete="username"></label>
+  <label>Password<input required type="password" name="password" autocomplete="current-password"></label>
+  <button class="btn btn-primary w-100" type="submit"><i class="bi bi-shield-check"></i> Sign In</button>
+  <a href="{{ url_for('auth.landing') }}">Back to access options</a>
+</form>
+{% endblock %}

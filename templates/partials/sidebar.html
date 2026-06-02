@@ -1,0 +1,25 @@
+{% set path = request.path %}
+{% set cost_sheet_path = path.startswith('/finance/cost-sheets') %}
+<aside class="sidebar">
+  <div class="brand-row">
+    <span class="brand-mark"><i class="bi bi-buildings"></i></span>
+    <span class="brand-copy"><span class="brand-name">ConstructDesk</span><small>Real Estate OS</small></span>
+    <button class="icon-btn sidebar-toggle ms-auto" id="sidebarToggle" title="Collapse sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
+  </div>
+  <nav class="side-nav">
+    {% if current_user and current_user.role == 'super_admin' %}
+    <a class="side-link {{ 'active' if path.startswith('/super-admin') else '' }}" href="{{ url_for('super_admin.dashboard') }}"><i class="bi bi-shield-lock"></i><span>Super Admin</span></a>
+    {% else %}
+    <a class="side-link {{ 'active' if path == '/' else '' }}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-house-door"></i><span>Dashboard</span></a>
+    <a class="side-link {{ 'active' if path.startswith('/masters') or cost_sheet_path else '' }}" href="{{ url_for('masters.workspace') }}"><i class="bi bi-collection"></i><span>Masters</span></a>
+    <a class="side-link {{ 'active' if path.startswith('/inventory') else '' }}" href="{{ url_for('inventory.index') }}"><i class="bi bi-building"></i><span>Inventory</span></a>
+    <a class="side-link {{ 'active' if path.startswith('/customers') else '' }}" href="{{ url_for('customers.index') }}"><i class="bi bi-people"></i><span>Customers</span></a>
+    <a class="side-link {{ 'active' if path.startswith('/finance') and not cost_sheet_path else '' }}" href="{{ url_for('finance.workspace') }}"><i class="bi bi-graph-up-arrow"></i><span>Finance</span></a>
+    <a class="side-link {{ 'active' if path.startswith('/receipts') else '' }}" href="{{ url_for('receipts.index') }}"><i class="bi bi-receipt-cutoff"></i><span>Receipts</span></a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-footer">
+    <span class="pulse-dot"></span>
+    <span>Workspace active</span>
+  </div>
+</aside>

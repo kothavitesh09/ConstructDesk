@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Master</p><h1>Cost Sheet</h1></div>
+</div>
+
+<form method="post" class="panel compact-form">
+  <div class="section-label">Cost Sheet Template</div>
+  <div class="row g-3">
+    <div class="col-md-3"><label class="form-label">Base Price per SFT</label><input name="base_price_per_sft" type="number" step="0.01" class="form-control" value="{{ template.base_price_per_sft }}"></div>
+    <div class="col-md-3"><label class="form-label">Infrastructure per SFT</label><input name="infrastructure_per_sft" type="number" step="0.01" class="form-control" value="{{ template.infrastructure_per_sft }}"></div>
+    <div class="col-md-3"><label class="form-label">Car Parking Charges</label><input name="car_parking" type="number" step="0.01" class="form-control" value="{{ template.car_parking }}"></div>
+    <div class="col-md-3"><label class="form-label">Floor Rise / SFT / Floor</label><input name="floor_rise_per_sft_per_floor" type="number" step="0.01" class="form-control" value="{{ template.floor_rise_per_sft_per_floor }}"></div>
+    <div class="col-md-3"><label class="form-label">Facing Charges per SFT</label><input name="facing_charges_per_sft" type="number" step="0.01" class="form-control" value="{{ template.facing_charges_per_sft }}"></div>
+    <div class="col-md-3"><label class="form-label">Club House per SFT</label><input name="clubhouse_per_sft" type="number" step="0.01" class="form-control" value="{{ template.clubhouse_per_sft }}"></div>
+    <div class="col-md-3"><label class="form-label">Other Charges</label><input name="other_charges" type="number" step="0.01" class="form-control" value="{{ template.other_charges }}"></div>
+    <div class="col-md-3"><label class="form-label">Legal & Documentation</label><input name="legal_documentation" type="number" step="0.01" class="form-control" value="{{ template.legal_documentation }}"></div>
+    <div class="col-md-3"><label class="form-label">Maintenance Deposit</label><input name="maintenance_deposit" type="number" step="0.01" class="form-control" value="{{ template.maintenance_deposit }}"></div>
+    <div class="col-md-3"><label class="form-label">Corpus Fund per SFT</label><input name="corpus_fund_per_sft" type="number" step="0.01" class="form-control" value="{{ template.corpus_fund_per_sft }}"></div>
+    <div class="col-md-3"><label class="form-label">Sale GST %</label><input name="sale_gst_percent" type="number" step="0.01" class="form-control" value="{{ template.sale_gst_percent }}"></div>
+    <div class="col-md-3"><label class="form-label">Additional GST %</label><input name="additional_gst_percent" type="number" step="0.01" class="form-control" value="{{ template.additional_gst_percent }}"></div>
+  </div>
+
+  <div class="section-label mt-4">Notes and Terms</div>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Notes</label>
+      <textarea name="notes" class="form-control" rows="6">{% for note in template.notes or [] %}{{ note }}
+{% endfor %}</textarea>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Terms & Conditions / Declaration</label>
+      <textarea name="terms_conditions" class="form-control" rows="6">{{ template.terms_conditions }}</textarea>
+    </div>
+  </div>
+
+  <div class="section-label mt-4">Payment Schedule Milestones</div>
+  <div class="table-responsive">
+    <table class="table table-sm erp-table" id="paymentScheduleTable">
+      <thead><tr><th>Milestone</th><th style="width: 180px;">Percentage</th><th style="width: 70px;"></th></tr></thead>
+      <tbody>
+        {% for item in template.payment_schedule or [] %}
+        <tr>
+          <td><input name="stage[]" class="form-control form-control-sm" value="{{ item.stage }}"></td>
+          <td><input name="percentage[]" type="number" step="0.01" class="form-control form-control-sm" value="{{ item.percentage }}"></td>
+          <td><button type="button" class="icon-btn remove-row"><i class="bi bi-trash"></i></button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-light btn-sm" id="addPaymentScheduleRow"><i class="bi bi-plus-lg"></i> Add Milestone</button>
+    <button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Cost Sheet Master</button>
+  </div>
+</form>
+{% endblock %}

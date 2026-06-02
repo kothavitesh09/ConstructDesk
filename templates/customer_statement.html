@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% macro amount(value) %}&#8377;{{ "{:,.2f}".format(value or 0) }}{% endmacro %}
+{% macro address_block(address) -%}
+  {{ address.line1 or '' }}{% if address.line2 %}, {{ address.line2 }}{% endif %}{% if address.city %}, {{ address.city }}{% endif %}{% if address.state %}, {{ address.state }}{% endif %}{% if address.pin %} - {{ address.pin }}{% endif %}
+{%- endmacro %}
+{% block content %}
+{% if not statement %}
+<div class="empty-state">Statement data is not available.</div>
+{% else %}
+{% set company = statement.company %}
+{% set general = company.general or {} %}
+{% set addresses = company.addresses or {} %}
+{% set report = company.report_settings or {} %}
+{% set booking = statement.booking %}
+{% set customer = statement.customer %}
+{% set flat = statement.flat %}
+{% set cost = statement.cost %}
+{% set summary = statement.summary %}
+{% set other = statement.other_charges %}
+<div class="page-head statement-actions">
+  <div><p class="eyebrow">Customer Profile</p><h1>Customer Cost & Collection Statement</h1></div>
+  <div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-light btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+    <button class="btn btn-primary btn-sm" type="button" id="exportStatementPdf" data-filename="customer-statement-{{ booking.flat_no or booking._id }}.pdf"><i class="bi bi-filetype-pdf"></i> Export PDF</button>
+  </div>
+</div>
+
+<article class="statement-sheet statement-container" id="statementContainer">
+  <header class="statement-header">
+    {% if general.logo_path %}<img class="statement-logo" src="{{ url_for('static', filename=general.logo_path) }}" alt="Company logo">{% endif %}
+    <div>
+      <h2>{{ general.company_name or config.COMPANY_NAME }}</h2>
+      <p>PAN: {{ general.pan_number or '-' }} | GST: {{ general.gst_number or '-' }}</p>
+      <p>Email: {{ general.email or '-' }} | Mobile: {{ general.mobile or '-' }}{% if general.website %} | {{ general.website }}{% endif %}</p>
+    </div>
+  </header>
+
+  <div class="statement-title">Customer Cost & Collection Statement</div>
+
+  <section class="statement-grid two report-section statement-card customer-company-section">
+    <div class="statement-card customer-info">
+      <h3>Customer Information</h3>
+      <table><tr><th>Customer Name</th><td>{{ customer.name or booking.customer_name }}</td></tr><tr><th>Flat Number</th><td>{{ booking.flat_no }}</td></tr><tr><th>Tower</th><td>{{ booking.tower }}</td></tr><tr><th>Floor</th><td>{{ booking.floor }}</td></tr><tr><th>Facing</th><td>{{ booking.facing or flat.facing }}</td></tr><tr><th>Area (SFT)</th><td>{{ booking.sft or flat.sft }}</td></tr></table>
+    </div>
+    <div class="statement-card company-info">
+      <h3>Company Information</h3>
+      <table><tr><th>Company Name</th><td>{{ general.company_name or config.COMPANY_NAME }}</td></tr><tr><th>PAN Number</th><td>{{ general.pan_number or '-' }}</td></tr><tr><th>Registered Office</th><td>{{ address_block(addresses.get('registered', {})) or '-' }}</td></tr><tr><th>Project Site</th><td>{{ address_block(addresses.get('project_site', {})) or '-' }}</td></tr><tr><th>Email</th><td>{{ general.email or '-' }}</td></tr><tr><th>Mobile Number</th><td>{{ general.mobile or '-' }}</td></tr></table>
+    </div>
+  </section>
+
+  <section class="report-section statement-card cost-sheet-section">
+    <h3>Cost Sheet Details</h3>
+    <table class="statement-table"><thead><tr><th>Particulars</th><th class="text-end">Amount</th></tr></thead><tbody>
+      <tr><td>Base Price</td><td class="text-end">{{ amount(cost.base_price) }}</td></tr>
+      <tr><td>Infrastructure Charges</td><td class="text-end">{{ amount(cost.infrastructure) }}</td></tr>
+      <tr><td>Floor Rise Charges</td><td class="text-end">{{ amount(cost.floor_rise) }}</td></tr>
+      <tr><td>Facing Charges</td><td class="text-end">{{ amount(cost.facing_charges) }}</td></tr>
+      <tr><td>Club House Charges</td><td class="text-end">{{ amount(cost.clubhouse) }}</td></tr>
+      <tr><td>Car Parking Charges</td><td class="text-end">{{ amount(cost.parking) }}</td></tr>
+      <tr><td>GST</td><td class="text-end">{{ amount(cost.gst) }}</td></tr>
+      <tr class="statement-total"><td>Grand Total</td><td class="text-end">{{ amount(cost.grand_total) }}</td></tr>
+      <tr class="statement-total"><td>Total Sale Consideration</td><td class="text-end">{{ amount(cost.sale_consideration) }}</td></tr>
+    </tbody></table>
+  </section>
+
+  <section class="statement-grid two report-section summary-charges-block">
+    <div class="statement-card outstanding-summary">
+      <h3>Outstanding Summary</h3>
+      <table><tr><th>Sale Consideration Receivable</th><td class="text-end">{{ amount(summary.sale_receivable) }}</td></tr><tr><th>Collection Till Date</th><td class="text-end">{{ amount(summary.collection_till_date) }}</td></tr><tr><th>Gross Due</th><td class="text-end">{{ amount(summary.gross_due) }}</td></tr><tr><th>TDS Deducted</th><td class="text-end">{{ amount(summary.tds) }}</td></tr><tr class="statement-total"><th>Net Due</th><td class="text-end">{{ amount(summary.net_due) }}</td></tr></table>
+    </div>
+    <div class="statement-card other-charges">
+      <h3>Other Charges</h3>
+      <table><tr><th>Corpus Fund</th><td class="text-end">{{ amount(other.corpus_fund) }}</td></tr><tr><th>Legal & Documentation Charges</th><td class="text-end">{{ amount(other.legal_documentation) }}</td></tr><tr><th>Maintenance Deposit</th><td class="text-end">{{ amount(other.maintenance_deposit) }}</td></tr><tr><th>GST if applicable</th><td class="text-end">{{ amount(other.gst_if_applicable) }}</td></tr><tr class="statement-total"><th>Sub Total</th><td class="text-end">{{ amount(other.sub_total) }}</td></tr></table>
+    </div>
+  </section>
+
+  <section class="report-section statement-card bank-accounts">
+    <h3>Bank Accounts</h3>
+    <table class="statement-table"><thead><tr><th>Purpose</th><th>Account Name</th><th>Account Number</th><th>IFSC Code</th><th>Bank Name</th></tr></thead><tbody>
+      {% for account in company.bank_accounts or [] %}
+      <tr><td>{{ account.purpose }}</td><td>{{ account.account_name }}</td><td>{{ account.account_number }}</td><td>{{ account.ifsc }}</td><td>{{ account.bank_name }}</td></tr>
+      {% else %}
+      <tr><td colspan="5">No bank accounts configured.</td></tr>
+      {% endfor %}
+    </tbody></table>
+  </section>
+
+  <section class="report-section collection-details">
+    <h3>Collection Details</h3>
+    <table class="statement-table"><thead><tr><th>Receipt Date</th><th>Receipt Number</th><th>Cheque Number</th><th>Bank</th><th class="text-end">Basic Amount</th><th class="text-end">GST Amount</th><th class="text-end">Total Amount</th></tr></thead><tbody>
+      {% for receipt in statement.receipts %}
+      <tr><td>{{ receipt.date }}</td><td>{{ receipt.receipt_no }}</td><td>{{ receipt.cheque_no or '-' }}</td><td>{{ receipt.bank or '-' }}</td><td class="text-end">{{ amount(receipt.basic) }}</td><td class="text-end">{{ amount(receipt.gst) }}</td><td class="text-end">{{ amount(receipt.amount) }}</td></tr>
+      {% else %}
+      <tr><td colspan="7">No collections recorded.</td></tr>
+      {% endfor %}
+    </tbody></table>
+  </section>
+
+  <footer class="statement-footer report-section statement-card company-footer">
+    <div>
+      <strong>{{ report.authorized_signatory or '' }}</strong>
+      <span>{{ report.designation or '' }}</span>
+    </div>
+    <div>{{ report.footer_notes or '' }}</div>
+  </footer>
+</article>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+document.getElementById("exportStatementPdf")?.addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+  const statement = document.getElementById("statementContainer");
+  if (!statement || !window.html2pdf) return;
+  const originalText = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="bi bi-hourglass-split"></i> Exporting';
+  try {
+    await html2pdf().set({
+      margin: 2,
+      filename: button.dataset.filename || "customer-statement.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", scrollX: 0, scrollY: 0 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"], avoid: [".customer-company-section", ".cost-sheet-section", ".summary-charges-block", ".outstanding-summary", ".other-charges", ".bank-accounts", ".company-footer", "tr"] }
+    }).from(statement).save();
+  } finally {
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+});
+</script>
+{% endblock %}

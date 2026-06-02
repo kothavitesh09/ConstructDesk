@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+{% macro amount(value) -%}&#8377;{{ "{:,.2f}".format(value or 0) }}{%- endmacro %}
+<div class="page-head">
+  <div><p class="eyebrow">{{ flat.tower }} Tower</p><h1>Flat {{ flat.flat_no }}</h1></div>
+  <div class="d-flex flex-wrap gap-2 align-items-center">
+    {% if booking %}<a class="btn btn-primary btn-sm" href="{{ url_for('finance.customer_statement', booking_id=booking._id) }}"><i class="bi bi-file-text"></i> Generate Statement</a>{% endif %}
+    <span class="status-badge {{ flat.status|lower }}">{{ flat.status }}</span>
+  </div>
+</div>
+<div class="profile-summary">
+  <div class="panel"><span>SFT</span><strong>{{ flat.sft }}</strong></div>
+  <div class="panel"><span>Facing</span><strong>{{ flat.facing }}</strong></div>
+  <div class="panel"><span>Customer</span><strong>{{ customer.name if customer else "Not booked" }}</strong></div>
+  <div class="panel"><span>Outstanding</span><strong>&#8377;{{ "{:,.0f}".format(due) }}</strong></div>
+</div>
+{% if booking %}
+<div class="summary-card mt-3">
+  <div><span>Gross Amount</span><strong>&#8377;{{ "{:,.0f}".format(booking.gross_amount or 0) }}</strong></div>
+  <div><span>Paid Amount</span><strong>&#8377;{{ "{:,.0f}".format(booking.paid_amount or 0) }}</strong></div>
+  <div><span>Booking Mode</span><strong>{{ booking.cost_mode|default("auto")|title }}</strong></div>
+  <div><span>Booked On</span><strong>{{ booking.booked_at.date() if booking.booked_at else "-" }}</strong></div>
+</div>
+{% endif %}
+<div class="panel mt-3">
+  <ul class="nav nav-tabs compact-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">Overview</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cost">Cost Sheet</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#receipts">Receipts</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dues">Due Statement</button></li>
+  </ul>
+  <div class="tab-content pt-4">
+    <div class="tab-pane fade show active" id="overview">
+      <div class="row g-3">
+        <div class="col-md-4"><div class="panel h-100"><div class="panel-title">Flat Details</div><div class="table-responsive"><table class="table table-sm erp-table"><tr><td>Project</td><td>{{ flat.project }}</td></tr><tr><td>Tower</td><td>{{ flat.tower }}</td></tr><tr><td>Floor</td><td>{{ flat.floor }}</td></tr><tr><td>Status</td><td><span class="status-badge {{ flat.status|lower }}">{{ flat.status }}</span></td></tr></table></div></div></div>
+        <div class="col-md-4"><div class="panel h-100"><div class="panel-title">Customer Details</div><div class="table-responsive"><table class="table table-sm erp-table"><tr><td>Name</td><td>{{ customer.name if customer else "-" }}</td></tr><tr><td>Phone</td><td>{{ customer.phone if customer else "-" }}</td></tr><tr><td>Email</td><td>{{ customer.email if customer and customer.email else "-" }}</td></tr><tr><td>PAN</td><td>{{ customer.pan if customer else "-" }}</td></tr><tr><td>Aadhaar</td><td>{{ customer.aadhaar if customer else "-" }}</td></tr></table></div></div></div>
+        <div class="col-md-4"><div class="panel h-100"><div class="panel-title">Booking Details</div><div class="table-responsive"><table class="table table-sm erp-table"><tr><td>Rate/SFT</td><td>&#8377;{{ "{:,.0f}".format(booking.rate_per_sft or 0) if booking else "0" }}</td></tr><tr><td>Base</td><td>&#8377;{{ "{:,.0f}".format(booking.base_price or 0) if booking else "0" }}</td></tr><tr><td>Paid</td><td>&#8377;{{ "{:,.0f}".format(paid) }}</td></tr><tr><td>Due</td><td>&#8377;{{ "{:,.0f}".format(due) }}</td></tr></table></div></div></div>
+      </div>
+    </div>
+    <div class="tab-pane fade" id="cost">
+      <div class="cost-sheet">
+        {% if booking and cost_sheet %}
+        {% set amounts = cost_sheet.amounts or {} %}
+        {% set template = cost_sheet.template or {} %}
+        <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+          <div>
+            <div class="section-label mb-1">Customer Cost Sheet</div>
+            <div class="text-muted">Snapshot generated from Master &rarr; Cost Sheet{% if cost_sheet.generated_at %} on {{ cost_sheet.generated_at.date() if cost_sheet.generated_at.date else cost_sheet.generated_at }}{% endif %}</div>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-light btn-sm" target="_blank" href="{{ url_for('finance.cost_sheet_view_pdf', booking_id=booking._id) }}"><i class="bi bi-eye"></i> View Cost Sheet</a>
+            <a class="btn btn-primary btn-sm" target="_blank" href="{{ url_for('finance.cost_sheet_view_pdf', booking_id=booking._id) }}"><i class="bi bi-printer"></i> Print Cost Sheet</a>
+            <a class="btn btn-light btn-sm" href="{{ url_for('finance.cost_sheet_pdf', booking_id=booking._id) }}"><i class="bi bi-filetype-pdf"></i> Download PDF</a>
+            <form method="post" action="{{ url_for('finance.regenerate_cost_sheet', booking_id=booking._id) }}" class="d-inline">
+              <button class="btn btn-light btn-sm"><i class="bi bi-arrow-clockwise"></i> Regenerate Cost Sheet (Admin Only)</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="panel soft-panel h-100">
+              <div class="panel-title">Customer Details</div>
+              <div class="table-responsive"><table class="table table-sm erp-table">
+                <tr><td>Name</td><td>{{ customer.name if customer else "-" }}</td></tr>
+                <tr><td>Mobile</td><td>{{ customer.phone if customer else "-" }}</td></tr>
+                <tr><td>Email</td><td>{{ customer.email if customer and customer.email else "-" }}</td></tr>
+                <tr><td>Aadhaar</td><td>{{ customer.aadhaar if customer else "-" }}</td></tr>
+                <tr><td>PAN</td><td>{{ customer.pan if customer else "-" }}</td></tr>
+              </table></div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="panel soft-panel h-100">
+              <div class="panel-title">Flat & Booking Details</div>
+              <div class="table-responsive"><table class="table table-sm erp-table">
+                <tr><td>Project</td><td>{{ flat.project }}</td></tr>
+                <tr><td>Tower / Flat</td><td>{{ flat.tower }} / {{ flat.flat_no }}</td></tr>
+                <tr><td>Floor / Facing / Type</td><td>{{ flat.floor }} / {{ flat.facing }} / {{ flat.type or "-" }}</td></tr>
+                <tr><td>Area (SFT)</td><td>{{ flat.sft }}</td></tr>
+                <tr><td>Booking Date</td><td>{{ booking.booked_at.date() if booking.booked_at else "-" }}</td></tr>
+                <tr><td>Booking Amount</td><td>{{ amount(booking.booking_amount or booking.paid_amount or 0) }}</td></tr>
+                <tr><td>Total Sale Value</td><td>{{ amount(amounts.grand_total) }}</td></tr>
+              </table></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive"><table class="table table-sm erp-table">
+          <thead><tr><th>Cost Calculation</th><th class="text-end">Rate</th><th class="text-end">Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Base Price</td><td class="text-end">{{ amount(template.base_price_per_sft) }}</td><td class="text-end">{{ amount(amounts.base_price) }}</td></tr>
+            <tr><td>Infrastructure Charges per SFT</td><td class="text-end">{{ amount(template.infrastructure_per_sft) }}</td><td class="text-end">{{ amount(amounts.infrastructure_charges) }}</td></tr>
+            <tr><td>Car Parking</td><td class="text-end"></td><td class="text-end">{{ amount(amounts.parking) }}</td></tr>
+            <tr><td>Floor Rise Charges</td><td class="text-end">{{ amount(template.floor_rise_per_sft_per_floor) }}</td><td class="text-end">{{ amount(amounts.floor_rise) }}</td></tr>
+            <tr><td>Facing Charges</td><td class="text-end">{{ amount(template.facing_charges_per_sft) }}</td><td class="text-end">{{ amount(amounts.facing_charges) }}</td></tr>
+            <tr><td>Club House Charges</td><td class="text-end">{{ amount(template.clubhouse_per_sft) }}</td><td class="text-end">{{ amount(amounts.clubhouse) }}</td></tr>
+            <tr class="fw-bold"><td>Total</td><td></td><td class="text-end">{{ amount(amounts.sale_total) }}</td></tr>
+            <tr class="fw-bold"><td>GST @ {{ template.sale_gst_percent }}%</td><td></td><td class="text-end">{{ amount(amounts.gst) }}</td></tr>
+            <tr class="fw-bold"><td>Sub Total (Including GST)</td><td class="text-end">A</td><td class="text-end">{{ amount(amounts.sale_sub_total) }}</td></tr>
+            <tr><td>Other Charges</td><td></td><td class="text-end">{{ amount(amounts.other_charges) }}</td></tr>
+            <tr><td>Legal & Documentation Charges</td><td></td><td class="text-end">{{ amount(amounts.legal_documentation) }}</td></tr>
+            <tr><td>Maintenance Deposit</td><td></td><td class="text-end">{{ amount(amounts.maintenance_deposit) }}</td></tr>
+            <tr class="fw-bold"><td>Additional Charges Sub Total</td><td class="text-end">B</td><td class="text-end">{{ amount(amounts.additional_sub_total) }}</td></tr>
+            <tr class="fw-bold"><td>Interest Free Corpus Fund per SFT</td><td class="text-end">{{ amount(template.corpus_fund_per_sft) }}</td><td class="text-end">{{ amount(amounts.corpus_fund) }}</td></tr>
+            <tr class="fw-bold"><td>Grand Total (A + B + C)</td><td></td><td class="text-end">{{ amount(amounts.grand_total) }}</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-md-5">
+            <div class="panel soft-panel h-100">
+              <div class="panel-title">Notes</div>
+              <ul class="mb-0">
+                {% for note in cost_sheet.notes or [] %}<li>{{ note }}</li>{% endfor %}
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <div class="panel soft-panel h-100">
+              <div class="panel-title">Payment Schedule</div>
+              <div class="table-responsive"><table class="table table-sm erp-table">
+                <thead><tr><th>Milestone</th><th class="text-end">%</th><th class="text-end">Total</th></tr></thead>
+                <tbody>
+                  {% for row in cost_sheet.payment_schedule or [] %}
+                  <tr><td>{{ row.stage }}</td><td class="text-end">{{ "{:,.2f}".format(row.percentage or 0) }}%</td><td class="text-end">{{ amount(row.total) }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state">Book this flat to generate a customer-specific cost sheet.</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="tab-pane fade" id="receipts">
+      <div class="timeline-list">
+        {% for r in receipts %}
+        <div class="timeline-item"><span class="timeline-dot"></span><div class="flex-grow-1"><strong>{{ r.receipt_no }}</strong><div class="text-muted">{{ r.date }} / {{ r.payment_mode }}</div></div><strong>&#8377;{{ "{:,.0f}".format(r.amount or 0) }}</strong></div>
+        {% else %}
+        <div class="empty-state">No receipts recorded for this flat.</div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="tab-pane fade" id="dues">
+      <div class="table-responsive"><table class="table table-sm erp-table"><tr><td>Gross Amount</td><td class="text-end">&#8377;{{ "{:,.0f}".format(gross) }}</td></tr><tr><td>Paid Amount</td><td class="text-end">&#8377;{{ "{:,.0f}".format(paid) }}</td></tr><tr class="fw-bold"><td>Due Amount</td><td class="text-end">&#8377;{{ "{:,.0f}".format(due) }}</td></tr></table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

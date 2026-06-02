@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% set general = company.general or {} %}
+{% set addresses = company.addresses or {} %}
+{% set report = company.report_settings or {} %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">Masters</p><h1>Company Details</h1></div>
+</div>
+
+<div class="panel">
+  <ul class="nav nav-tabs compact-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link {{ 'active' if active_tab == 'general' else '' }}" data-bs-toggle="tab" data-bs-target="#general">General Information</button></li>
+    <li class="nav-item"><button class="nav-link {{ 'active' if active_tab == 'addresses' else '' }}" data-bs-toggle="tab" data-bs-target="#addresses">Addresses</button></li>
+    <li class="nav-item"><button class="nav-link {{ 'active' if active_tab == 'bank_accounts' else '' }}" data-bs-toggle="tab" data-bs-target="#bankAccounts">Bank Accounts</button></li>
+    <li class="nav-item"><button class="nav-link {{ 'active' if active_tab == 'report_settings' else '' }}" data-bs-toggle="tab" data-bs-target="#reportSettings">Report Settings</button></li>
+  </ul>
+
+  <div class="tab-content pt-4">
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'general' else '' }}" id="general">
+      <form method="post" enctype="multipart/form-data" class="compact-form">
+        <input type="hidden" name="section" value="general">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Company Name</label><input name="company_name" class="form-control" value="{{ general.company_name or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">PAN Number</label><input name="pan_number" class="form-control" value="{{ general.pan_number or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">GST Number</label><input name="gst_number" class="form-control" value="{{ general.gst_number or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">Email Address</label><input type="email" name="email" class="form-control" value="{{ general.email or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">Mobile Number</label><input name="mobile" class="form-control" value="{{ general.mobile or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">Website</label><input name="website" class="form-control" value="{{ general.website or '' }}"></div>
+          <div class="col-md-6"><label class="form-label">Company Logo Upload</label><input type="file" name="logo" class="form-control" accept="image/*"></div>
+          {% if general.logo_path %}<div class="col-md-6"><label class="form-label">Current Logo</label><div class="upload-preview"><img src="{{ url_for('static', filename=general.logo_path) }}" alt="Company logo"></div></div>{% endif %}
+        </div>
+        <div class="form-actions"><button class="btn btn-primary">Save General Information</button></div>
+      </form>
+    </div>
+
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'addresses' else '' }}" id="addresses">
+      <form method="post" class="compact-form">
+        <input type="hidden" name="section" value="addresses">
+        {% for key, label in [('registered', 'Registered Office Address'), ('corporate', 'Corporate Office Address'), ('project_site', 'Project Site Address')] %}
+        {% set address = addresses.get(key, {}) %}
+        <div class="section-label {{ 'mt-4' if not loop.first else '' }}">{{ label }}</div>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Address Line 1</label><input name="{{ key }}_line1" class="form-control" value="{{ address.line1 or '' }}"></div>
+          <div class="col-md-6"><label class="form-label">Address Line 2</label><input name="{{ key }}_line2" class="form-control" value="{{ address.line2 or '' }}"></div>
+          <div class="col-md-3"><label class="form-label">City</label><input name="{{ key }}_city" class="form-control" value="{{ address.city or '' }}"></div>
+          <div class="col-md-3"><label class="form-label">State</label><input name="{{ key }}_state" class="form-control" value="{{ address.state or '' }}"></div>
+          <div class="col-md-3"><label class="form-label">PIN Code</label><input name="{{ key }}_pin" class="form-control" value="{{ address.pin or '' }}"></div>
+        </div>
+        {% endfor %}
+        <div class="form-actions"><button class="btn btn-primary">Save Addresses</button></div>
+      </form>
+    </div>
+
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'bank_accounts' else '' }}" id="bankAccounts">
+      <form method="post" action="{{ url_for('masters.save_bank_account') }}" class="compact-form panel soft-panel">
+        <div class="section-label">Add Bank Account</div>
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Account Purpose</label><select name="purpose" class="form-select">{% for purpose in account_purposes %}<option>{{ purpose }}</option>{% endfor %}</select></div>
+          <div class="col-md-3"><label class="form-label">Account Name</label><input name="account_name" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Account Number</label><input name="account_number" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">IFSC Code</label><input name="ifsc" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Bank Name</label><input name="bank_name" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Branch Name</label><input name="branch_name" class="form-control"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary">Add Account</button></div>
+      </form>
+
+      <div class="table-responsive mt-3">
+        <table class="table table-sm erp-table">
+          <thead><tr><th>Purpose</th><th>Account Name</th><th>Account Number</th><th>IFSC</th><th>Bank</th><th>Branch</th><th></th></tr></thead>
+          <tbody>
+            {% for account in company.bank_accounts or [] %}
+            <tr>
+              <td>{{ account.purpose }}</td><td>{{ account.account_name }}</td><td>{{ account.account_number }}</td><td>{{ account.ifsc }}</td><td>{{ account.bank_name }}</td><td>{{ account.branch_name }}</td>
+              <td class="text-end">
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#editAccount{{ account.id }}"><i class="bi bi-pencil"></i> Edit</button>
+                <form method="post" action="{{ url_for('masters.delete_bank_account', account_id=account.id) }}" class="d-inline"><button class="btn btn-light btn-sm"><i class="bi bi-trash"></i> Delete</button></form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7">No bank accounts configured.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'report_settings' else '' }}" id="reportSettings">
+      <form method="post" enctype="multipart/form-data" class="compact-form">
+        <input type="hidden" name="section" value="report_settings">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Authorized Signatory Name</label><input name="authorized_signatory" class="form-control" value="{{ report.authorized_signatory or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">Designation</label><input name="designation" class="form-control" value="{{ report.designation or '' }}"></div>
+          <div class="col-md-4"><label class="form-label">Signature Upload</label><input type="file" name="signature" class="form-control" accept="image/*"></div>
+          <div class="col-12"><label class="form-label">Footer Notes</label><textarea name="footer_notes" rows="3" class="form-control">{{ report.footer_notes or '' }}</textarea></div>
+          <div class="col-12"><label class="form-label">Terms & Conditions</label><textarea name="terms_conditions" rows="5" class="form-control">{{ report.terms_conditions or '' }}</textarea></div>
+          {% if report.signature_path %}<div class="col-md-6"><label class="form-label">Current Signature</label><div class="upload-preview"><img src="{{ url_for('static', filename=report.signature_path) }}" alt="Authorized signature"></div></div>{% endif %}
+        </div>
+        <div class="form-actions"><button class="btn btn-primary">Save Report Settings</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% for account in company.bank_accounts or [] %}
+<div class="modal fade" id="editAccount{{ account.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <form method="post" action="{{ url_for('masters.save_bank_account') }}" class="modal-content compact-form">
+      <input type="hidden" name="account_id" value="{{ account.id }}">
+      <div class="modal-header"><h5 class="modal-title">Edit Bank Account</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Account Purpose</label><select name="purpose" class="form-select">{% for purpose in account_purposes %}<option {{ 'selected' if account.purpose == purpose }}>{{ purpose }}</option>{% endfor %}</select></div>
+          <div class="col-md-4"><label class="form-label">Account Name</label><input name="account_name" class="form-control" value="{{ account.account_name }}"></div>
+          <div class="col-md-4"><label class="form-label">Account Number</label><input name="account_number" class="form-control" value="{{ account.account_number }}"></div>
+          <div class="col-md-4"><label class="form-label">IFSC Code</label><input name="ifsc" class="form-control" value="{{ account.ifsc }}"></div>
+          <div class="col-md-4"><label class="form-label">Bank Name</label><input name="bank_name" class="form-control" value="{{ account.bank_name }}"></div>
+          <div class="col-md-4"><label class="form-label">Branch Name</label><input name="branch_name" class="form-control" value="{{ account.branch_name }}"></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save Account</button></div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

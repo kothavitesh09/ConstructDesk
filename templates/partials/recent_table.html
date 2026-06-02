@@ -1,0 +1,12 @@
+<div class="panel">
+  <div class="panel-title">Recent Bookings</div>
+  <div class="table-responsive"><table class="table table-sm erp-table">
+    <tbody>
+      {% for b in recent_bookings %}
+      <tr><td>{{ b.flat_no }}</td><td>{{ b.tower }}</td><td class="text-end">&#8377;{{ "{:,.0f}".format(b.gross_amount or 0) }}</td></tr>
+      {% else %}
+      <tr><td>No bookings yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+{% macro money(value) -%}&#8377;{{ "{:,.0f}".format(value or 0) }}{%- endmacro %}
+
+<div class="page-head compact-command-head">
+  <div>
+    <p class="dashboard-subtitle">Overview of your business</p>
+    <h1>Dashboard</h1>
+  </div>
+  <div class="compact-actions">
+    <a class="btn btn-light btn-sm" href="{{ url_for('customers.new') }}"><i class="bi bi-person-plus"></i> Add Customer</a>
+    <a class="btn btn-light btn-sm" href="{{ url_for('customers.new') }}"><i class="bi bi-bookmark-plus"></i> New Booking</a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('receipts.index') }}"><i class="bi bi-receipt"></i> Receipt</a>
+  </div>
+</div>
+
+<form class="panel compact-dashboard-filters" method="get">
+  <select name="project_id" class="form-select form-select-sm" onchange="this.form.submit()">
+    <option value="">All Projects</option>
+    {% for p in projects %}<option value="{{ p._id }}" {{ 'selected' if filters.project_id == p._id }}>{{ p.name }}</option>{% endfor %}
+  </select>
+  <input name="date_from" type="date" class="form-control form-control-sm" value="{{ filters.date_from or '' }}">
+  <input name="date_to" type="date" class="form-control form-control-sm" value="{{ filters.date_to or '' }}">
+  <button class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Apply</button>
+</form>
+
+<section class="business-summary-grid">
+  <article class="business-summary-card inventory-summary-card">
+    <div class="summary-card-head"><i class="bi bi-buildings"></i><span>Inventory</span></div>
+    <div class="summary-lines">
+      <div><span>Total Flats</span><strong>{{ stats.total_flats }}</strong></div>
+      <div><span>Available Flats</span><strong>{{ stats.available_flats }}</strong></div>
+      <div><span>Sold Flats</span><strong>{{ stats.sold_flats }}</strong></div>
+    </div>
+    <div class="inventory-mini-status">
+      <span class="blue">Available {{ stats.available_flats }}</span>
+      <span class="orange">Booked {{ stats.booked_flats }}</span>
+      <span class="green">Sold {{ stats.sold_flats }}</span>
+      <span class="purple">Registered {{ stats.registered_flats }}</span>
+    </div>
+  </article>
+  <article class="business-summary-card revenue-focus">
+    <div class="summary-card-head"><i class="bi bi-graph-up-arrow"></i><span>Revenue</span></div>
+    <div class="summary-primary">{{ money(stats.total_sales) }}</div>
+    <div class="summary-note">Total Sales Value</div>
+  </article>
+  <article class="business-summary-card collections-focus">
+    <div class="summary-card-head"><i class="bi bi-cash-stack"></i><span>Collections</span></div>
+    <div class="summary-lines">
+      <div><span>Amount Received</span><strong>{{ money(stats.total_received) }}</strong></div>
+      <div><span>Outstanding Amount</span><strong>{{ money(stats.outstanding) }}</strong></div>
+      <div><span>Collection %</span><strong>{{ stats.collection_efficiency }}%</strong></div>
+    </div>
+  </article>
+  <article class="business-summary-card health-highlight">
+    <div class="summary-card-head"><i class="bi bi-speedometer2"></i><span>Business Health</span></div>
+    <div class="summary-health-row">
+      <div class="summary-health-ring" style="--score: {{ stats.health_score }};">
+        <strong>{{ stats.health_score }}</strong>
+        <span>/100</span>
+      </div>
+      <span class="health-status {{ stats.health_status|lower|replace(' ', '-') }}">{{ stats.health_status }}</span>
+    </div>
+  </article>
+</section>
+
+<section class="performance-grid">
+  <div class="panel tower-performance-panel">
+    <div class="compact-panel-title">Tower Performance</div>
+    <div class="table-responsive"><table class="table table-sm erp-table compact-table">
+      <thead><tr><th>Tower</th><th>Total Flats</th><th>Sold</th><th>Available</th><th>Progress</th></tr></thead>
+      <tbody>
+        {% for row in tower_rows[:7] %}
+        {% set progress = (row.sold / (row.total or 1) * 100)|round(1) if row.total else 0 %}
+        <tr>
+          <td><strong>Tower {{ row.name }}</strong><span class="tower-progress-note">{{ progress }}% Sold</span></td>
+          <td>{{ row.total }}</td>
+          <td>{{ row.sold }}</td>
+          <td>{{ row.available }}</td>
+          <td><div class="progress tower-progress"><div class="progress-bar" style="width: {{ progress }}%"></div></div></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No tower data.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="panel sales-progress-card">
+    <div class="compact-panel-title">Sales Progress</div>
+    <div class="sales-progress-main">
+      <div class="sales-ring" style="--progress: {{ stats.sales_progress }};">
+        <strong>{{ stats.sales_progress }}%</strong>
+      </div>
+      <div class="sales-progress-lines">
+        <div><span>Total Flats</span><strong>{{ stats.total_flats }}</strong></div>
+        <div><span>Sold</span><strong>{{ stats.sold_flats }}</strong></div>
+        <div><span>Available</span><strong>{{ stats.available_flats }}</strong></div>
+      </div>
+    </div>
+    <div class="sales-progress-bar"><span style="width: {{ stats.sales_progress }}%"></span></div>
+    <div class="smart-alerts-mini">
+      {% for alert in alerts %}<div class="{{ alert.type|lower }}">{{ alert.label }}: {{ alert.count }}</div>{% else %}<div>No critical alerts.</div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="compact-dues-grid">
+  <div class="panel">
+    <div class="compact-panel-title">Pending Collections <a href="{{ url_for('finance.due_statements') }}">View All</a></div>
+    <div class="table-responsive"><table class="table table-sm erp-table compact-table">
+      <thead><tr><th>Customer</th><th>Flat</th><th class="text-end">Due Amount</th></tr></thead>
+      <tbody>{% for b in pending_bookings %}<tr><td>{{ b.customer_name }}</td><td>{{ b.flat_no }}</td><td class="text-end">{{ money(b.due_amount) }}</td></tr>{% else %}<tr><td colspan="3">No pending collections.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <div class="compact-panel-title">Upcoming Collections <a href="{{ url_for('finance.due_statements') }}">View All</a></div>
+    <div class="upcoming-compact">
+      <div><span>Next 7 Days</span><strong>{{ money(upcoming["7"]) }}</strong></div>
+      <div><span>Next 15 Days</span><strong>{{ money(upcoming["15"]) }}</strong></div>
+      <div><span>Next 30 Days</span><strong>{{ money(upcoming["30"]) }}</strong></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel compact-activity">
+  <div class="compact-panel-title">Recent Activity</div>
+  <ul class="nav nav-tabs compact-tabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#recentBookings">Bookings</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#recentReceipts">Receipts</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#recentRegistrations">Registrations</button></li>
+  </ul>
+  <div class="tab-content compact-tab-content">
+    <div class="tab-pane fade show active" id="recentBookings"><div class="activity-list">{% for b in recent_bookings %}<a href="{{ url_for('inventory.flat_profile', flat_id=b.flat_id) }}"><strong>{{ b.customer_name }}</strong><span>{{ b.flat_no }} / {{ b.tower }}</span></a>{% else %}<div class="empty-mini">No recent bookings.</div>{% endfor %}</div></div>
+    <div class="tab-pane fade" id="recentReceipts"><div class="activity-list">{% for r in recent_receipts %}<a href="{{ url_for('receipts.index', booking_id=r.booking_id) }}"><strong>{{ r.customer_name }}</strong><span>{{ r.flat_no }} / {{ money(r.amount) }}</span></a>{% else %}<div class="empty-mini">No recent receipts.</div>{% endfor %}</div></div>
+    <div class="tab-pane fade" id="recentRegistrations"><div class="activity-list">{% for r in recent_registrations %}<div><strong>{{ r.customer_name }}</strong><span>{{ r.flat_no }} / {{ r.date }}</span></div>{% else %}<div class="empty-mini">No recent registrations.</div>{% endfor %}</div></div>
+  </div>
+</section>
+{% endblock %}

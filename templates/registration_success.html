@@ -1,0 +1,8 @@
+{% extends "auth_base.html" %}
+{% block content %}
+<div class="auth-success">
+  <i class="bi bi-check2-circle"></i>
+  <h1>Your company registration has been submitted and is awaiting approval from the Super Admin.</h1>
+  <a class="btn btn-primary" href="{{ url_for('auth.landing') }}">Done</a>
+</div>
+{% endblock %}

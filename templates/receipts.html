@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Daily Operations</p><h1>Receipts</h1></div></div>
+<div class="row g-3 receipt-shell">
+  <div class="col-xl-8">
+    <form method="get" class="panel filter-bar receipt-selector">
+      <select name="booking_id" class="form-select form-select-sm">
+        <option value="">Search Flat No / Customer Name</option>
+        {% for b in bookings %}<option value="{{ b._id }}" {{ 'selected' if selected and selected.booking._id == b._id }}>{{ b.flat_no }} - {{ b.customer_name }} - {{ b.tower }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i> Load</button>
+    </form>
+    {% if selected %}
+    <section class="panel receipt-customer-card mt-3">
+      <div class="panel-title">Customer Information</div>
+      <div class="receipt-info-grid">
+        <div><span>Customer Name</span><strong>{{ selected.customer.name }}</strong></div>
+        <div><span>Tower</span><strong>{{ selected.booking.tower }}</strong></div>
+        <div><span>Flat Number</span><strong>{{ selected.booking.flat_no }}</strong></div>
+        <div><span>Area (SFT)</span><strong>{{ selected.flat.sft if selected.flat else selected.booking.sft }}</strong></div>
+        <div><span>Project Name</span><strong>{{ selected.booking.project }}</strong></div>
+      </div>
+    </section>
+
+    <form method="post" class="panel compact-form mt-3 payment-panel receipt-entry-form">
+      <input type="hidden" name="booking_id" value="{{ selected.booking._id }}">
+      <input type="hidden" name="basic" value="0">
+      <input type="hidden" name="gst" value="0">
+      <input type="hidden" name="tds" value="0">
+
+      <section class="receipt-form-section">
+        <div class="section-label">Receipt Information</div>
+        <div class="row g-3">
+          <div class="col-md-3"><label class="form-label">Receipt Date</label><input required type="date" name="date" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Receipt Number</label><input readonly class="form-control" value="{{ receipt_no_preview }}"></div>
+          <div class="col-md-3"><label class="form-label">Payment Mode</label><select name="payment_mode" class="form-select" id="receiptPaymentMode"><option>Cheque</option><option>NEFT</option><option>RTGS</option><option>IMPS</option><option>Cash</option><option>Card / POS</option><option>UPI</option></select></div>
+          <div class="col-md-3">
+            <label class="form-label">Amount Received</label>
+            <input required type="number" name="amount" class="form-control receipt-amount-input" id="receiptAmount">
+          </div>
+        </div>
+      </section>
+
+      <section class="receipt-form-section">
+        <div class="section-label">Receipt Against</div>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Receipt Against</label><select name="receipt_against" class="form-select"><option>Sale Consideration</option><option>Corpus Fund</option><option>Maintenance Deposit</option><option>Legal & Documentation Charges</option><option>Registration Charges</option><option>Other Charges</option></select></div>
+        </div>
+      </section>
+
+      <section class="receipt-form-section">
+        <div class="section-label">Payment Details</div>
+        <div class="row g-3 payment-fields" data-payment-fields="Cheque">
+          <div class="col-md-3"><label class="form-label">Cheque Number</label><input name="cheque_no" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Cheque Date</label><input type="date" name="cheque_date" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Bank Name</label><input name="bank" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Branch Name</label><input name="branch" class="form-control"></div>
+        </div>
+        <div class="row g-3 payment-fields" data-payment-fields="NEFT,RTGS,IMPS">
+          <div class="col-md-3"><label class="form-label">UTR Number</label><input name="utr_number" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Transaction Date</label><input type="date" name="transaction_date" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Bank Name</label><input name="bank" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Branch Name</label><input name="branch" class="form-control"></div>
+        </div>
+        <div class="row g-3 payment-fields" data-payment-fields="Card / POS">
+          <div class="col-md-4"><label class="form-label">Reference Number</label><input name="reference_number" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label">Bank Name</label><input name="bank" class="form-control"></div>
+        </div>
+        <div class="empty-state payment-fields payment-fields-empty" data-payment-fields="Cash,UPI">No additional payment details required for this mode.</div>
+      </section>
+
+      <section class="receipt-form-section">
+        <div class="section-label">Receipt Status</div>
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Receipt Status</label><select name="receipt_status" class="form-select"><option>Cleared</option><option selected>Pending</option><option>Bounced</option></select></div>
+        </div>
+      </section>
+
+      <section class="receipt-form-section">
+        <div class="section-label">Remarks</div>
+        <label class="form-label">Remarks / Narration / Internal Notes</label>
+        <textarea name="remarks" rows="5" class="form-control"></textarea>
+      </section>
+
+      <div class="form-actions receipt-actions"><button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Receipt</button><button type="button" onclick="window.print()" class="btn btn-light"><i class="bi bi-printer"></i> Print</button></div>
+    </form>
+    {% else %}
+    <div class="empty-state mt-3">Select a booked flat to enter a receipt.</div>
+    {% endif %}
+  </div>
+  <div class="col-xl-4">
+    {% if selected %}
+    <div class="panel mb-3">
+      <div class="panel-title">Selected Receipt History</div>
+      <div class="timeline-list">
+        {% for r in selected.receipts %}
+        <button type="button" class="timeline-item receipt-history-button" data-bs-toggle="modal" data-bs-target="#receiptDetails{{ r._id }}"><span class="timeline-dot"></span><span class="flex-grow-1 text-start"><strong>{{ r.receipt_no }}</strong><span class="text-muted">{{ r.date }} / {{ r.payment_mode }}</span></span><strong>&#8377;{{ "{:,.0f}".format(r.amount or 0) }}</strong></button>
+        {% else %}
+        <div class="empty-state">No previous receipts for this booking.</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    <div class="panel">
+      <div class="panel-title">Recent Receipts</div>
+      <div class="timeline-list">
+        {% for r in recent_receipts %}
+        <button type="button" class="timeline-item receipt-history-button" data-bs-toggle="modal" data-bs-target="#receiptDetails{{ r._id }}"><span class="timeline-dot"></span><span class="flex-grow-1 text-start"><strong>{{ r.receipt_no }}</strong><span class="text-muted">{{ r.flat_no }}</span></span><strong>&#8377;{{ "{:,.0f}".format(r.amount or 0) }}</strong></button>
+        {% else %}
+        <div class="empty-state">No receipts yet</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% for detail in receipt_details %}
+{% set r = detail.receipt %}
+{% set booking = detail.booking %}
+{% set customer = detail.customer %}
+{% set flat = detail.flat %}
+<div class="modal fade receipt-details-modal" id="receiptDetails{{ r._id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content compact-form">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow mb-1">Receipt Details</p>
+          <h5 class="modal-title">{{ r.receipt_no }}</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="receipt-view-mode">
+          <section class="receipt-modal-section">
+            <div class="section-label">Customer Information</div>
+            <div class="receipt-info-grid">
+              <div><span>Customer Name</span><strong>{{ customer.name or r.customer_name }}</strong></div>
+              <div><span>Tower</span><strong>{{ booking.tower or r.tower }}</strong></div>
+              <div><span>Flat Number</span><strong>{{ booking.flat_no or r.flat_no }}</strong></div>
+              <div><span>Area (SFT)</span><strong>{{ flat.sft or booking.sft or '-' }}</strong></div>
+              <div><span>Project Name</span><strong>{{ booking.project or '-' }}</strong></div>
+            </div>
+          </section>
+
+          <section class="receipt-modal-section">
+            <div class="section-label">Receipt Information</div>
+            <div class="receipt-detail-grid">
+              <div><span>Receipt Number</span><strong>{{ r.receipt_no }}</strong></div>
+              <div><span>Receipt Date</span><strong>{{ r.date or '-' }}</strong></div>
+              <div><span>Payment Mode</span><strong>{{ r.payment_mode or '-' }}</strong></div>
+              <div><span>Amount Received</span><strong>&#8377;{{ "{:,.0f}".format(r.amount or 0) }}</strong></div>
+              <div><span>Receipt Against</span><strong>{{ r.receipt_against or '-' }}</strong></div>
+            </div>
+          </section>
+
+          <section class="receipt-modal-section">
+            <div class="section-label">Payment Details</div>
+            <div class="receipt-detail-grid">
+              {% if r.payment_mode == 'Cheque' %}
+              <div><span>Cheque Number</span><strong>{{ r.cheque_no or '-' }}</strong></div>
+              <div><span>Cheque Date</span><strong>{{ r.cheque_date or '-' }}</strong></div>
+              <div><span>Bank Name</span><strong>{{ r.bank or '-' }}</strong></div>
+              <div><span>Branch Name</span><strong>{{ r.branch or '-' }}</strong></div>
+              <div><span>Status</span><strong>{{ r.receipt_status or 'Pending' }}</strong></div>
+              {% elif r.payment_mode in ['NEFT', 'RTGS', 'IMPS'] %}
+              <div><span>UTR Number</span><strong>{{ r.utr_number or '-' }}</strong></div>
+              <div><span>Transaction Date</span><strong>{{ r.transaction_date or '-' }}</strong></div>
+              <div><span>Bank Name</span><strong>{{ r.bank or '-' }}</strong></div>
+              <div><span>Branch Name</span><strong>{{ r.branch or '-' }}</strong></div>
+              {% elif r.payment_mode == 'Card / POS' %}
+              <div><span>Reference Number</span><strong>{{ r.reference_number or '-' }}</strong></div>
+              <div><span>Bank Name</span><strong>{{ r.bank or '-' }}</strong></div>
+              {% else %}
+              <div><span>Details</span><strong>No additional payment details required.</strong></div>
+              {% endif %}
+            </div>
+            {% if r.payment_mode == 'Cheque' %}
+            <div class="receipt-status-actions">
+              {% for status in ['Pending', 'Cleared', 'Bounced'] %}
+              {% if status != (r.receipt_status or 'Pending') %}
+              <form method="post" action="{{ url_for('receipts.status', receipt_id=r._id) }}">
+                <input type="hidden" name="receipt_status" value="{{ status }}">
+                <button class="btn btn-light btn-sm">Mark as {{ status }}</button>
+              </form>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% endif %}
+          </section>
+
+          <section class="receipt-modal-section">
+            <div class="section-label">Remarks</div>
+            <div class="receipt-remarks">{{ r.remarks or '-' }}</div>
+          </section>
+        </div>
+
+        <form method="post" action="{{ url_for('receipts.edit', receipt_id=r._id) }}" class="receipt-edit-mode d-none">
+          <input type="hidden" name="basic" value="{{ r.basic or 0 }}">
+          <input type="hidden" name="gst" value="{{ r.gst or 0 }}">
+          <input type="hidden" name="tds" value="{{ r.tds or 0 }}">
+          <section class="receipt-modal-section">
+            <div class="section-label">Receipt Information</div>
+            <div class="row g-3">
+              <div class="col-md-3"><label class="form-label">Receipt Number</label><input readonly class="form-control" value="{{ r.receipt_no }}"></div>
+              <div class="col-md-3"><label class="form-label">Receipt Date</label><input required type="date" name="date" class="form-control" value="{{ r.date }}"></div>
+              <div class="col-md-3"><label class="form-label">Payment Mode</label><select name="payment_mode" class="form-select receipt-modal-payment-mode"><option {{ 'selected' if r.payment_mode == 'Cheque' }}>Cheque</option><option {{ 'selected' if r.payment_mode == 'NEFT' }}>NEFT</option><option {{ 'selected' if r.payment_mode == 'RTGS' }}>RTGS</option><option {{ 'selected' if r.payment_mode == 'IMPS' }}>IMPS</option><option {{ 'selected' if r.payment_mode == 'Cash' }}>Cash</option><option {{ 'selected' if r.payment_mode == 'Card / POS' }}>Card / POS</option><option {{ 'selected' if r.payment_mode == 'UPI' }}>UPI</option></select></div>
+              <div class="col-md-3"><label class="form-label">Amount Received</label><input required type="number" name="amount" class="form-control receipt-amount-input" value="{{ r.amount or 0 }}"></div>
+              <div class="col-md-6"><label class="form-label">Receipt Against</label><select name="receipt_against" class="form-select"><option {{ 'selected' if r.receipt_against == 'Sale Consideration' }}>Sale Consideration</option><option {{ 'selected' if r.receipt_against == 'Corpus Fund' }}>Corpus Fund</option><option {{ 'selected' if r.receipt_against == 'Maintenance Deposit' }}>Maintenance Deposit</option><option {{ 'selected' if r.receipt_against == 'Legal & Documentation Charges' }}>Legal & Documentation Charges</option><option {{ 'selected' if r.receipt_against == 'Registration Charges' }}>Registration Charges</option><option {{ 'selected' if r.receipt_against == 'Other Charges' }}>Other Charges</option></select></div>
+              <div class="col-md-3"><label class="form-label">Receipt Status</label><select name="receipt_status" class="form-select"><option {{ 'selected' if (r.receipt_status or 'Pending') == 'Pending' }}>Pending</option><option {{ 'selected' if r.receipt_status == 'Cleared' }}>Cleared</option><option {{ 'selected' if r.receipt_status == 'Bounced' }}>Bounced</option></select></div>
+            </div>
+          </section>
+
+          <section class="receipt-modal-section">
+            <div class="section-label">Payment Details</div>
+            <div class="row g-3 modal-payment-fields" data-payment-fields="Cheque">
+              <div class="col-md-3"><label class="form-label">Cheque Number</label><input name="cheque_no" class="form-control" value="{{ r.cheque_no or '' }}"></div>
+              <div class="col-md-3"><label class="form-label">Cheque Date</label><input type="date" name="cheque_date" class="form-control" value="{{ r.cheque_date or '' }}"></div>
+              <div class="col-md-3"><label class="form-label">Bank Name</label><input name="bank" class="form-control" value="{{ r.bank or '' }}"></div>
+              <div class="col-md-3"><label class="form-label">Branch Name</label><input name="branch" class="form-control" value="{{ r.branch or '' }}"></div>
+            </div>
+            <div class="row g-3 modal-payment-fields" data-payment-fields="NEFT,RTGS,IMPS">
+              <div class="col-md-3"><label class="form-label">UTR Number</label><input name="utr_number" class="form-control" value="{{ r.utr_number or '' }}"></div>
+              <div class="col-md-3"><label class="form-label">Transaction Date</label><input type="date" name="transaction_date" class="form-control" value="{{ r.transaction_date or '' }}"></div>
+              <div class="col-md-3"><label class="form-label">Bank Name</label><input name="bank" class="form-control" value="{{ r.bank or '' }}"></div>
+              <div class="col-md-3"><label class="form-label">Branch Name</label><input name="branch" class="form-control" value="{{ r.branch or '' }}"></div>
+            </div>
+            <div class="row g-3 modal-payment-fields" data-payment-fields="Card / POS">
+              <div class="col-md-4"><label class="form-label">Reference Number</label><input name="reference_number" class="form-control" value="{{ r.reference_number or '' }}"></div>
+              <div class="col-md-4"><label class="form-label">Bank Name</label><input name="bank" class="form-control" value="{{ r.bank or '' }}"></div>
+            </div>
+            <div class="empty-state modal-payment-fields payment-fields-empty" data-payment-fields="Cash,UPI">No additional payment details required for this mode.</div>
+          </section>
+
+          <section class="receipt-modal-section">
+            <div class="section-label">Remarks</div>
+            <textarea name="remarks" rows="5" class="form-control">{{ r.remarks or '' }}</textarea>
+          </section>
+
+          <div class="form-actions">
+            <button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Changes</button>
+            <button type="button" class="btn btn-light receipt-edit-cancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer receipt-view-mode">
+        <button type="button" class="btn btn-light receipt-modal-print"><i class="bi bi-printer"></i> Print</button>
+        <a class="btn btn-light" href="{{ url_for('finance.receipt_pdf', receipt_id=r._id) }}"><i class="bi bi-filetype-pdf"></i> Download PDF</a>
+        <button type="button" class="btn btn-primary receipt-edit-start"><i class="bi bi-pencil-square"></i> Edit Receipt</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Masters</p><h1>Create Project</h1></div></div>
+<form method="post" class="panel compact-form">
+  <div class="section-label">Project Details</div>
+  <div class="row g-3">
+    <div class="col-md-6"><label class="form-label">Project Name</label><input required name="name" class="form-control"></div>
+    <div class="col-md-6"><label class="form-label">Area</label><input name="area" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Acres</label><input name="acres" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Guntas</label><input name="guntas" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Construct Area</label><input name="construct_area" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Build-up Area</label><input name="built_up_area" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Start Date</label><input name="start_date" type="date" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">End Date</label><input name="end_date" type="date" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Duration</label><input name="duration" class="form-control"></div>
+  </div>
+
+  <div class="section-label mt-4">Towers</div>
+  <div class="table-responsive">
+    <table class="table table-sm erp-table" id="towerTable">
+      <thead><tr><th>Tower Name</th><th>Number of Floors</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><input name="tower_name[]" class="form-control form-control-sm" placeholder="A"></td><td><input name="tower_floors[]" type="number" min="1" class="form-control form-control-sm" placeholder="10"></td><td><button type="button" class="icon-btn remove-row"><i class="bi bi-trash"></i></button></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-label mt-4">One Floor Flat Pattern</div>
+  <div class="table-responsive">
+    <table class="table table-sm erp-table" id="patternTable">
+      <thead><tr><th>Base Flat No</th><th>SFT</th><th>Facing</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><input name="flat_no[]" class="form-control form-control-sm" placeholder="A101"></td><td><input name="sft[]" type="number" class="form-control form-control-sm" placeholder="1200"></td><td><input name="facing[]" class="form-control form-control-sm" placeholder="East"></td><td><button type="button" class="icon-btn remove-row"><i class="bi bi-trash"></i></button></td></tr>
+        <tr><td><input name="flat_no[]" class="form-control form-control-sm" placeholder="A102"></td><td><input name="sft[]" type="number" class="form-control form-control-sm" placeholder="1400"></td><td><input name="facing[]" class="form-control form-control-sm" placeholder="West"></td><td><button type="button" class="icon-btn remove-row"><i class="bi bi-trash"></i></button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="form-actions"><button type="button" class="btn btn-light btn-sm" id="addTowerRow"><i class="bi bi-plus-lg"></i> Add Tower</button><button type="button" class="btn btn-light btn-sm" id="addPatternRow"><i class="bi bi-plus-lg"></i> Add Flat Pattern</button><button class="btn btn-primary">Save Project & Generate Inventory</button></div>
+</form>
+{% endblock %}

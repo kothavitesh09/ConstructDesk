@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Customers</p><h1>New Booking</h1></div></div>
+<form method="post" class="panel compact-form">
+  <div class="section-label">Customer Details</div>
+  <div class="row g-3">
+    <div class="col-md-4"><label class="form-label">Name</label><input required name="name" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Phone</label><input name="phone" class="form-control"></div>
+    <div class="col-md-4"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
+    <div class="col-md-2"><label class="form-label">Aadhaar</label><input name="aadhaar" class="form-control"></div>
+    <div class="col-md-2"><label class="form-label">PAN</label><input name="pan" class="form-control"></div>
+    <div class="col-12"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+  </div>
+
+  <div class="section-label mt-4">Booking Details</div>
+  <div class="row g-3">
+    <div class="col-md-4"><label class="form-label">Project</label><select id="bookingProject" class="form-select"><option value="">All Projects</option>{% for p in projects %}<option value="{{ p._id }}">{{ p.name }}</option>{% endfor %}</select></div>
+    <div class="col-md-6"><label class="form-label">Select Flat</label><select required name="flat_id" id="flatSelect" class="form-select"><option value="">Choose available flat</option>{% for f in flats %}<option value="{{ f._id }}" data-project="{{ f.project_id }}" data-sft="{{ f.sft }}">{{ f.project }} / {{ f.tower }} / {{ f.flat_no }} - {{ f.sft }} sft</option>{% endfor %}</select></div>
+    <div class="col-md-2"><label class="form-label">Flat SFT</label><div class="form-control" id="flatSftDisplay">-</div></div>
+  </div>
+
+  <div class="section-label mt-4">Cost Sheet Mode</div>
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <input class="btn-check" type="radio" name="cost_mode" id="costAuto" value="auto" checked>
+    <label class="btn btn-light" for="costAuto"><i class="bi bi-magic"></i> Auto Calculate</label>
+    <input class="btn-check" type="radio" name="cost_mode" id="costManual" value="manual">
+    <label class="btn btn-light" for="costManual"><i class="bi bi-pencil-square"></i> Manual Cost Sheet</label>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-3"><label class="form-label">Rate per SFT</label><input name="rate_per_sft" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Base Price</label><input name="base_price" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Floor Rise</label><input name="floor_rise" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Parking</label><input name="parking" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Clubhouse</label><input name="clubhouse" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Facing Charges</label><input name="facing_charges" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Corpus Fund</label><input name="corpus_fund" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">GST %</label><input name="gst_percent" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">GST Amount</label><input name="gst" type="number" step="0.01" class="form-control"></div>
+    <div class="col-md-3"><label class="form-label">Final Amount</label><input name="gross_amount" type="number" step="0.01" class="form-control"></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-primary">Book Flat</button></div>
+</form>
+{% endblock %}

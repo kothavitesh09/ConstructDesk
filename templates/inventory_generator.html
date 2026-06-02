@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Masters</p><h1>Inventory Generator</h1></div></div>
+<form method="post" class="panel compact-form">
+  <div class="row g-3">
+    <div class="col-md-6"><label class="form-label">Tower</label><select required name="tower_id" class="form-select">{% for t in towers %}<option value="{{ t._id }}">{{ t.project }} - {{ t.name }} ({{ t.floors }} floors)</option>{% endfor %}</select></div>
+  </div>
+  <div class="table-responsive mt-3">
+    <table class="table table-sm erp-table" id="patternTable">
+      <thead><tr><th>Base Flat No</th><th>SFT</th><th>Facing</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><input name="flat_no[]" class="form-control form-control-sm" placeholder="A101"></td><td><input name="sft[]" type="number" class="form-control form-control-sm" placeholder="1200"></td><td><input name="facing[]" class="form-control form-control-sm" placeholder="East"></td><td><button type="button" class="icon-btn remove-row"><i class="bi bi-trash"></i></button></td></tr>
+        <tr><td><input name="flat_no[]" class="form-control form-control-sm" placeholder="A102"></td><td><input name="sft[]" type="number" class="form-control form-control-sm" placeholder="1300"></td><td><input name="facing[]" class="form-control form-control-sm" placeholder="West"></td><td><button type="button" class="icon-btn remove-row"><i class="bi bi-trash"></i></button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="form-actions"><button type="button" class="btn btn-light btn-sm" id="addPatternRow"><i class="bi bi-plus-lg"></i> Add Row</button><button class="btn btn-primary">Generate Inventory</button></div>
+</form>
+{% endblock %}

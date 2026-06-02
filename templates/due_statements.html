@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Finance</p><h1>Due Statements</h1></div><button class="btn btn-light btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Export PDF</button></div>
+<form class="panel filter-bar" method="get">
+  <input name="customer" class="form-control form-control-sm" placeholder="Customer" value="{{ filters.customer or '' }}">
+  <input name="flat_no" class="form-control form-control-sm" placeholder="Flat No" value="{{ filters.flat_no or '' }}">
+  <select name="tower" class="form-select form-select-sm"><option value="">Tower</option>{% for t in towers %}<option value="{{ t.name }}" {{ 'selected' if filters.tower == t.name }}>{{ t.name }}</option>{% endfor %}</select>
+  <select name="project_id" class="form-select form-select-sm"><option value="">Project</option>{% for p in projects %}<option value="{{ p._id }}" {{ 'selected' if filters.project_id == p._id }}>{{ p.name }}</option>{% endfor %}</select>
+  <button class="btn btn-primary btn-sm">Filter</button>
+</form>
+<div class="panel mt-3"><div class="table-responsive"><table class="table table-sm erp-table data-table"><thead><tr><th>Customer</th><th>Flat</th><th>Tower</th><th>Gross Amount</th><th>Paid Amount</th><th>Due Amount</th><th>GST</th><th>Corpus Fund</th><th>TDS</th><th></th></tr></thead><tbody>{% for b in bookings %}<tr><td>{{ b.customer_name }}</td><td><a class="table-link" href="{{ url_for('inventory.flat_profile', flat_id=b.flat_id) }}">{{ b.flat_no }}</a></td><td>{{ b.tower }}</td><td>&#8377;{{ "{:,.0f}".format(b.gross_amount or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.paid_amount or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.due_amount or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.gst or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.corpus_fund or 0) }}</td><td>&#8377;{{ "{:,.0f}".format(b.tds or 0) }}</td><td><a class="btn btn-light btn-sm" href="{{ url_for('finance.due_pdf', booking_id=b._id) }}"><i class="bi bi-filetype-pdf"></i></a></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}
