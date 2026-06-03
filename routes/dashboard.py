@@ -1,4 +1,5 @@
 from datetime import datetime
+from math import ceil
 
 from flask import Blueprint, render_template, request
 
@@ -32,6 +33,10 @@ def _date(value):
 
 def _pct(part, total):
     return round((part / total * 100), 1) if total else 0
+
+
+def _activity_date(item):
+    return _date(item.get("date") or item.get("booked_at") or item.get("created_at")) or datetime.min
 
 
 def _matches_date_range(value, start, end):
@@ -104,31 +109,59 @@ def index():
     health_score = round((sales_progress + collection_efficiency + inventory_movement) / 3)
     health_status = "Excellent" if health_score >= 90 else "Good" if health_score >= 75 else "Attention Needed" if health_score >= 50 else "Critical"
 
+    tower_query = {"project_id": filters["project_id"]} if filters.get("project_id") else {}
+    all_towers = TowerService.all(tower_query, [("project", 1), ("name", 1)])
     tower_rows = []
-    for tower in TowerService.all({"project_id": filters["project_id"]} if filters.get("project_id") else {}, [("project", 1), ("name", 1)]):
+    for tower in all_towers:
         tower_flats = [flat for flat in flats if flat.get("tower_id") == tower["_id"]]
         tower_bookings = [booking for booking in bookings if booking.get("tower_id") == tower["_id"]]
         tower_booking_ids = {booking["_id"] for booking in tower_bookings}
         tower_receipts = [receipt for receipt in receipts if receipt.get("booking_id") in tower_booking_ids or receipt.get("tower") == tower.get("name")]
         revenue = sum(_amount(booking.get("gross_amount")) for booking in tower_bookings)
         collected = sum(_amount(receipt.get("amount")) for receipt in tower_receipts)
+        sold = sum(1 for flat in tower_flats if flat.get("status") == "Sold")
+        progress = _pct(sold, len(tower_flats))
         tower_rows.append({
             "name": tower.get("name"),
             "project": tower.get("project"),
             "total": len(tower_flats),
-            "sold": sum(1 for flat in tower_flats if flat.get("status") == "Sold"),
+            "sold": sold,
             "available": sum(1 for flat in tower_flats if flat.get("status") == "Available"),
+            "progress": progress,
             "collection_pct": _pct(collected, revenue),
             "revenue": revenue,
         })
+    tower_rows = sorted(tower_rows, key=lambda row: (row["progress"], row["sold"], row["total"]), reverse=True)
+    tower_summary = {
+        "total": len(all_towers),
+        "best": tower_rows[0] if tower_rows else None,
+        "average_progress": round(sum(row["progress"] for row in tower_rows) / len(tower_rows), 1) if tower_rows else 0,
+    }
 
     pending_bookings = sorted([booking for booking in bookings if _amount(booking.get("due_amount")) > 0], key=lambda item: _amount(item.get("due_amount")), reverse=True)
-    upcoming = {"7": 0, "15": 0, "30": 0}
+    pending_customer_ids = {booking.get("customer_id") or booking.get("customer_name") for booking in pending_bookings}
+    pending_customer_ids.discard(None)
+    pending_summary = {
+        "total_outstanding": outstanding,
+        "customers_pending": len(pending_customer_ids),
+        "highest": pending_bookings[0] if pending_bookings else None,
+        "overdue_customers": len(pending_customer_ids),
+        "top": pending_bookings[:5],
+    }
+    upcoming = {
+        "7": {"amount": 0, "customers": 0},
+        "15": {"amount": 0, "customers": 0},
+        "30": {"amount": 0, "customers": 0},
+    }
+    pending_count = len(pending_bookings)
     for booking in pending_bookings:
         due = _amount(booking.get("due_amount"))
-        upcoming["7"] += due * 0.25
-        upcoming["15"] += due * 0.5
-        upcoming["30"] += due
+        upcoming["7"]["amount"] += due * 0.25
+        upcoming["15"]["amount"] += due * 0.5
+        upcoming["30"]["amount"] += due
+    upcoming["7"]["customers"] = min(ceil(pending_count * 0.25), pending_count)
+    upcoming["15"]["customers"] = min(ceil(pending_count * 0.5), pending_count)
+    upcoming["30"]["customers"] = pending_count
 
     alerts = []
     if pending_bookings:
@@ -156,9 +189,44 @@ def index():
             if flat.get("status") == "Registered"
         ]
 
+    recent_activity = []
+    for booking in bookings:
+        recent_activity.append({
+            "type": "New Booking",
+            "label": booking.get("customer_name") or "Customer",
+            "meta": f"{booking.get('flat_no', '-') or '-'} / {booking.get('tower', '-') or '-'}",
+            "url": f"/inventory/flat/{booking.get('flat_id')}" if booking.get("flat_id") else "",
+            "created_at": booking.get("booked_at") or booking.get("created_at"),
+        })
+    for receipt in receipts:
+        recent_activity.append({
+            "type": "Payment Received",
+            "label": receipt.get("customer_name") or "Customer",
+            "meta": f"{receipt.get('flat_no', '-') or '-'} / {_amount(receipt.get('amount')):,.0f}",
+            "url": f"/receipts/?booking_id={receipt.get('booking_id')}" if receipt.get("booking_id") else "/receipts/",
+            "created_at": receipt.get("date") or receipt.get("created_at"),
+        })
+    for registration in recent_registrations:
+        recent_activity.append({
+            "type": "Registration Completed",
+            "label": registration.get("customer_name") or "Customer",
+            "meta": registration.get("flat_no") or "-",
+            "url": "",
+            "created_at": registration.get("date"),
+        })
+    for customer in customers[:5]:
+        recent_activity.append({
+            "type": "Customer Added",
+            "label": customer.get("name") or "Customer",
+            "meta": customer.get("phone") or "-",
+            "url": "",
+            "created_at": customer.get("created_at"),
+        })
+    recent_activity = sorted(recent_activity, key=_activity_date, reverse=True)[:5]
+
     stats = {
         "total_projects": len(ProjectService.all()),
-        "total_towers": len(TowerService.all()),
+        "total_towers": len(all_towers),
         "total_flats": len(flats),
         "available_flats": available_flats,
         "booked_flats": booked_flats,
@@ -188,10 +256,13 @@ def index():
         towers=TowerService.all({"project_id": filters["project_id"]}, [("name", 1)]) if filters.get("project_id") else TowerService.all({}, [("name", 1)]),
         filters=filters,
         tower_rows=tower_rows,
+        tower_summary=tower_summary,
         recent_receipts=receipts[:5],
         recent_bookings=bookings[:5],
         recent_registrations=recent_registrations[:5],
+        recent_activity=recent_activity,
         pending_bookings=pending_bookings[:5],
+        pending_summary=pending_summary,
         top_outstanding=pending_bookings[:5],
         alerts=alerts,
         upcoming=upcoming,

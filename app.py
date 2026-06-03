@@ -1,7 +1,7 @@
 from flask import Flask, abort, g, redirect, request, session, url_for
 
 from config import Config
-from database.mongo import close_client, get_db, init_indexes
+from database.mongo import get_db, init_indexes
 from routes.auth import auth_bp, super_admin_bp
 from routes.dashboard import dashboard_bp
 from routes.masters import masters_bp
@@ -97,7 +97,6 @@ def create_app():
             "active_project": active_project,
         }
 
-    app.teardown_appcontext(close_client)
     init_indexes(app)
 
     return app

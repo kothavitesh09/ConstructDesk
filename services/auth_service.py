@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from flask import current_app
+from pymongo.errors import DuplicateKeyError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
@@ -94,7 +95,11 @@ class AuthService:
             "created_at": now,
             "updated_at": now,
         }
-        company_id = cls.companies().insert_one(company).inserted_id
+        try:
+            company_id = cls.companies().insert_one(company).inserted_id
+        except DuplicateKeyError as exc:
+            raise ValueError("An account with this email already exists.") from exc
+
         user = {
             "company_id": str(company_id),
             "name": company["owner_name"],
@@ -105,7 +110,14 @@ class AuthService:
             "created_at": now,
             "updated_at": now,
         }
-        cls.users().insert_one(user)
+        try:
+            cls.users().insert_one(user)
+        except DuplicateKeyError as exc:
+            cls.companies().delete_one({"_id": company_id})
+            raise ValueError("An account with this email already exists.") from exc
+        except Exception:
+            cls.companies().delete_one({"_id": company_id})
+            raise
         cls.log("company_registered", company_id=str(company_id), details={"email": email})
         return str(company_id)
 

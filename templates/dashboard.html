@@ -1,14 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
 {% macro money(value) -%}&#8377;{{ "{:,.0f}".format(value or 0) }}{%- endmacro %}
+{% macro compact_money(value) -%}
+  {%- set amount = value or 0 -%}
+  {%- if amount >= 1000000 -%}
+    &#8377;{{ "{:.1f}M".format(amount / 1000000) }}
+  {%- elif amount >= 100000 -%}
+    &#8377;{{ "{:.1f}L".format(amount / 100000) }}
+  {%- else -%}
+    {{ money(amount) }}
+  {%- endif -%}
+{%- endmacro %}
 
 <div class="page-head compact-command-head">
   <div>
     <p class="dashboard-subtitle">Overview of your business</p>
     <h1>Dashboard</h1>
   </div>
-  <div class="compact-actions">
-    <a class="btn btn-light btn-sm" href="{{ url_for('customers.new') }}"><i class="bi bi-person-plus"></i> Add Customer</a>
+  <div class="compact-actions">    
     <a class="btn btn-light btn-sm" href="{{ url_for('customers.new') }}"><i class="bi bi-bookmark-plus"></i> New Booking</a>
     <a class="btn btn-primary btn-sm" href="{{ url_for('receipts.index') }}"><i class="bi bi-receipt"></i> Receipt</a>
   </div>
@@ -66,73 +75,85 @@
 
 <section class="performance-grid">
   <div class="panel tower-performance-panel">
-    <div class="compact-panel-title">Tower Performance</div>
-    <div class="table-responsive"><table class="table table-sm erp-table compact-table">
-      <thead><tr><th>Tower</th><th>Total Flats</th><th>Sold</th><th>Available</th><th>Progress</th></tr></thead>
-      <tbody>
-        {% for row in tower_rows[:7] %}
-        {% set progress = (row.sold / (row.total or 1) * 100)|round(1) if row.total else 0 %}
-        <tr>
-          <td><strong>Tower {{ row.name }}</strong><span class="tower-progress-note">{{ progress }}% Sold</span></td>
-          <td>{{ row.total }}</td>
-          <td>{{ row.sold }}</td>
-          <td>{{ row.available }}</td>
-          <td><div class="progress tower-progress"><div class="progress-bar" style="width: {{ progress }}%"></div></div></td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5">No tower data.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table></div>
+    <div class="compact-panel-title">
+      Tower Performance
+      <a href="{{ url_for('inventory.index', project_id=filters.project_id, load=1) if filters.project_id else url_for('inventory.index') }}">View All</a>
+    </div>
+    <div class="tower-summary-strip">
+      <div><span>Total Towers</span><strong>{{ tower_summary.total }}</strong></div>
+      <div><span>Best Performing Tower</span><strong>{{ 'Tower ' ~ tower_summary.best.name if tower_summary.best else '-' }}</strong></div>
+      <div><span>Average Sales Progress</span><strong>{{ tower_summary.average_progress }}%</strong></div>
+    </div>
+    <div class="tower-top-list">
+      {% for row in tower_rows[:5] %}
+      <div class="tower-top-row">
+        <div class="tower-top-copy">
+          <strong>Tower {{ row.name }}</strong>
+          <span>{{ row.sold }} / {{ row.total }} sold</span>
+        </div>
+        <div class="tower-top-meter">
+          <span>{{ row.progress }}%</span>
+          <div class="tower-progress"><div style="width: {{ row.progress }}%"></div></div>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-mini">No tower data.</div>
+      {% endfor %}
+    </div>
   </div>
   <div class="panel sales-progress-card">
     <div class="compact-panel-title">Sales Progress</div>
-    <div class="sales-progress-main">
-      <div class="sales-ring" style="--progress: {{ stats.sales_progress }};">
-        <strong>{{ stats.sales_progress }}%</strong>
-      </div>
-      <div class="sales-progress-lines">
-        <div><span>Total Flats</span><strong>{{ stats.total_flats }}</strong></div>
-        <div><span>Sold</span><strong>{{ stats.sold_flats }}</strong></div>
-        <div><span>Available</span><strong>{{ stats.available_flats }}</strong></div>
-      </div>
+    <div class="sales-progress-hero">
+      <strong>{{ stats.sales_progress }}% Sold</strong>
+      <span>{{ stats.sold_flats }} / {{ stats.total_flats }} Flats Sold</span>
     </div>
     <div class="sales-progress-bar"><span style="width: {{ stats.sales_progress }}%"></span></div>
-    <div class="smart-alerts-mini">
-      {% for alert in alerts %}<div class="{{ alert.type|lower }}">{{ alert.label }}: {{ alert.count }}</div>{% else %}<div>No critical alerts.</div>{% endfor %}
+    <div class="sales-progress-counts">
+      <div><span>Sold</span><strong>{{ stats.sold_flats }}</strong></div>
+      <div><span>Available</span><strong>{{ stats.available_flats }}</strong></div>
     </div>
   </div>
 </section>
 
 <section class="compact-dues-grid">
-  <div class="panel">
-    <div class="compact-panel-title">Pending Collections <a href="{{ url_for('finance.due_statements') }}">View All</a></div>
-    <div class="table-responsive"><table class="table table-sm erp-table compact-table">
-      <thead><tr><th>Customer</th><th>Flat</th><th class="text-end">Due Amount</th></tr></thead>
-      <tbody>{% for b in pending_bookings %}<tr><td>{{ b.customer_name }}</td><td>{{ b.flat_no }}</td><td class="text-end">{{ money(b.due_amount) }}</td></tr>{% else %}<tr><td colspan="3">No pending collections.</td></tr>{% endfor %}</tbody>
-    </table></div>
+  <div class="panel pending-collections-card">
+    <div class="compact-panel-title">Pending Collections <a href="{{ url_for('finance.due_statements') }}">View Collections</a></div>
+    <div class="pending-collections-summary">
+      <div class="pending-primary"><span>Total Outstanding</span><strong>{{ money(pending_summary.total_outstanding) }}</strong></div>
+      <div><span>Customers Pending</span><strong>{{ pending_summary.customers_pending }}</strong></div>
+      <div><span>Overdue Customers</span><strong>{{ pending_summary.overdue_customers }}</strong></div>
+      <div class="pending-highest"><span>Highest Outstanding Customer</span><strong>{{ pending_summary.highest.customer_name if pending_summary.highest else '-' }}</strong><em>{{ money(pending_summary.highest.due_amount) if pending_summary.highest else money(0) }}</em></div>
+    </div>
+    <div class="pending-top-list">
+      {% for b in pending_summary.top[:5] %}
+      <div><span>{{ b.customer_name }}</span><strong>{{ money(b.due_amount) }}</strong></div>
+      {% else %}
+      <div class="empty-mini">No pending collections.</div>
+      {% endfor %}
+    </div>
   </div>
-  <div class="panel">
-    <div class="compact-panel-title">Upcoming Collections <a href="{{ url_for('finance.due_statements') }}">View All</a></div>
-    <div class="upcoming-compact">
-      <div><span>Next 7 Days</span><strong>{{ money(upcoming["7"]) }}</strong></div>
-      <div><span>Next 15 Days</span><strong>{{ money(upcoming["15"]) }}</strong></div>
-      <div><span>Next 30 Days</span><strong>{{ money(upcoming["30"]) }}</strong></div>
+  <div class="panel collection-forecast-card">
+    <div class="compact-panel-title">Collection Forecast <a href="{{ url_for('finance.due_statements') }}">View Collections</a></div>
+    <div class="forecast-tiles">
+      <div><span>Next 7 Days</span><strong>{{ compact_money(upcoming["7"].amount) }}</strong><em>{{ upcoming["7"].customers }} Customers</em></div>
+      <div><span>Next 15 Days</span><strong>{{ compact_money(upcoming["15"].amount) }}</strong><em>{{ upcoming["15"].customers }} Customers</em></div>
+      <div><span>Next 30 Days</span><strong>{{ compact_money(upcoming["30"].amount) }}</strong><em>{{ upcoming["30"].customers }} Customers</em></div>
     </div>
   </div>
 </section>
 
 <section class="panel compact-activity">
   <div class="compact-panel-title">Recent Activity</div>
-  <ul class="nav nav-tabs compact-tabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#recentBookings">Bookings</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#recentReceipts">Receipts</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#recentRegistrations">Registrations</button></li>
-  </ul>
-  <div class="tab-content compact-tab-content">
-    <div class="tab-pane fade show active" id="recentBookings"><div class="activity-list">{% for b in recent_bookings %}<a href="{{ url_for('inventory.flat_profile', flat_id=b.flat_id) }}"><strong>{{ b.customer_name }}</strong><span>{{ b.flat_no }} / {{ b.tower }}</span></a>{% else %}<div class="empty-mini">No recent bookings.</div>{% endfor %}</div></div>
-    <div class="tab-pane fade" id="recentReceipts"><div class="activity-list">{% for r in recent_receipts %}<a href="{{ url_for('receipts.index', booking_id=r.booking_id) }}"><strong>{{ r.customer_name }}</strong><span>{{ r.flat_no }} / {{ money(r.amount) }}</span></a>{% else %}<div class="empty-mini">No recent receipts.</div>{% endfor %}</div></div>
-    <div class="tab-pane fade" id="recentRegistrations"><div class="activity-list">{% for r in recent_registrations %}<div><strong>{{ r.customer_name }}</strong><span>{{ r.flat_no }} / {{ r.date }}</span></div>{% else %}<div class="empty-mini">No recent registrations.</div>{% endfor %}</div></div>
+  <div class="activity-feed">
+    {% for item in recent_activity %}
+      {% if item.url %}
+      <a href="{{ item.url }}"><i class="bi bi-dot"></i><strong>{{ item.type }}</strong><span>{{ item.label }}</span><em>{{ item.meta }}</em></a>
+      {% else %}
+      <div><i class="bi bi-dot"></i><strong>{{ item.type }}</strong><span>{{ item.label }}</span><em>{{ item.meta }}</em></div>
+      {% endif %}
+    {% else %}
+    <div class="empty-mini">No recent activity.</div>
+    {% endfor %}
   </div>
 </section>
 {% endblock %}

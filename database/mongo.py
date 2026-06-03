@@ -1,22 +1,25 @@
-from flask import current_app, g
+from threading import Lock
+
+from flask import current_app
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
 
+_mongo_client = None
+_mongo_client_lock = Lock()
+
+
 def get_client():
-    if "mongo_client" not in g:
-        g.mongo_client = MongoClient(current_app.config["MONGO_URI"], serverSelectionTimeoutMS=1200)
-    return g.mongo_client
+    global _mongo_client
+    if _mongo_client is None:
+        with _mongo_client_lock:
+            if _mongo_client is None:
+                _mongo_client = MongoClient(current_app.config["MONGO_URI"], serverSelectionTimeoutMS=1200)
+    return _mongo_client
 
 
 def get_db():
     return get_client()[current_app.config["MONGO_DB_NAME"]]
-
-
-def close_client(_error=None):
-    client = g.pop("mongo_client", None)
-    if client is not None:
-        client.close()
 
 
 def _key_list(keys):
@@ -58,9 +61,20 @@ def _ensure_index(collection, keys, app, **options):
                 app.logger.warning("Could not create fallback index on %s for %s: %s", collection.name, keys, fallback_exc)
 
 
+def _drop_index_if_present(collection, index_name, app):
+    if index_name not in collection.index_information():
+        return
+    try:
+        collection.drop_index(index_name)
+    except PyMongoError as exc:
+        app.logger.warning("Could not drop stale index %s on %s: %s", index_name, collection.name, exc)
+
+
 def init_indexes(app):
     with app.app_context():
         db = get_db()
+
+        _drop_index_if_present(db.companies, "companyId_1", app)
 
         _ensure_index(
             db.companies,

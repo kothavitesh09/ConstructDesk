@@ -1257,6 +1257,98 @@ textarea.form-control { line-height: 1.6; }
   max-height: 330px;
 }
 
+.tower-performance-panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.tower-summary-strip {
+  display: grid;
+  grid-template-columns: .65fr minmax(0, 1.25fr) .9fr;
+  gap: 8px;
+}
+
+.tower-summary-strip > div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.tower-summary-strip span,
+.tower-top-copy span,
+.sales-progress-hero span,
+.sales-progress-counts span,
+.pending-collections-summary span,
+.pending-top-list span,
+.forecast-tiles span,
+.forecast-tiles em,
+.activity-feed span,
+.activity-feed em {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tower-summary-strip strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tower-top-list {
+  display: grid;
+  gap: 8px;
+}
+
+.tower-top-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(180px, 1.25fr);
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.tower-top-copy,
+.tower-top-meter {
+  min-width: 0;
+}
+
+.tower-top-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tower-top-meter {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.tower-top-meter > span {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
 .tower-progress-note {
   display: block;
   margin-top: 3px;
@@ -1268,18 +1360,37 @@ textarea.form-control { line-height: 1.6; }
 .tower-progress {
   min-width: 180px;
   height: 9px;
+  overflow: hidden;
   border-radius: 999px;
   background: #e2e8f0;
 }
 
-.tower-progress .progress-bar {
+.tower-progress .progress-bar,
+.tower-progress > div {
+  height: 100%;
+  border-radius: inherit;
   background: linear-gradient(90deg, #2563eb, #22c55e);
 }
 
 .sales-progress-card {
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: 10px;
+  max-height: 180px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sales-progress-hero {
+  display: grid;
+  gap: 3px;
+}
+
+.sales-progress-hero strong {
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.05;
 }
 
 .sales-progress-main {
@@ -1337,6 +1448,28 @@ textarea.form-control { line-height: 1.6; }
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #2563eb, #22c55e);
+}
+
+.sales-progress-counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sales-progress-counts > div {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.sales-progress-counts strong {
+  color: var(--text);
+  font-weight: 800;
 }
 
 .smart-alerts-mini {
@@ -1572,6 +1705,95 @@ textarea.form-control { line-height: 1.6; }
   font-size: 15px;
 }
 
+.pending-collections-card,
+.collection-forecast-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.pending-collections-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .8fr) minmax(0, .8fr) minmax(0, 1.1fr);
+  gap: 8px;
+}
+
+.pending-collections-summary > div,
+.forecast-tiles > div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.pending-collections-summary strong,
+.pending-highest em,
+.pending-top-list strong,
+.forecast-tiles strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--text);
+  font-weight: 800;
+  line-height: 1.12;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pending-primary strong {
+  font-size: 20px;
+}
+
+.pending-highest em,
+.forecast-tiles em,
+.activity-feed em {
+  font-style: normal;
+}
+
+.pending-top-list {
+  display: grid;
+  gap: 6px;
+  max-height: 172px;
+  overflow: hidden;
+}
+
+.pending-top-list > div:not(.empty-mini) {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 9px;
+  border: 1px solid #eef2f7;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.pending-top-list span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forecast-tiles {
+  min-height: 118px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.forecast-tiles > div {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.forecast-tiles strong {
+  font-size: 22px;
+}
+
 .compact-activity .compact-tabs.nav-tabs {
   margin-bottom: 10px;
   border-radius: 10px;
@@ -1616,6 +1838,57 @@ textarea.form-control { line-height: 1.6; }
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
+}
+
+.activity-feed {
+  height: 226px;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.activity-feed a,
+.activity-feed > div:not(.empty-mini) {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 18px minmax(130px, .8fr) minmax(140px, 1fr) minmax(110px, .75fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  color: var(--text);
+  text-decoration: none;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.activity-feed a:hover {
+  color: var(--text);
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.activity-feed i {
+  color: var(--primary);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.activity-feed strong,
+.activity-feed span,
+.activity-feed em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-feed strong {
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .empty-mini {
@@ -3162,6 +3435,29 @@ body {
 }
 
 @media (max-width: 980px) {
+  .performance-grid,
+  .compact-dues-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tower-summary-strip,
+  .pending-collections-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sales-progress-card {
+    max-height: none;
+  }
+
+  .activity-feed a,
+  .activity-feed > div:not(.empty-mini) {
+    grid-template-columns: 18px minmax(120px, .8fr) minmax(120px, 1fr);
+  }
+
+  .activity-feed em {
+    display: none;
+  }
+
   .auth-shell {
     grid-template-columns: 1fr;
     gap: 0;
@@ -3174,6 +3470,22 @@ body {
 }
 
 @media (max-width: 576px) {
+  .tower-summary-strip,
+  .tower-top-row,
+  .pending-collections-summary,
+  .forecast-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .tower-top-meter {
+    grid-template-columns: 42px 1fr;
+  }
+
+  .activity-feed a,
+  .activity-feed > div:not(.empty-mini) {
+    grid-template-columns: 18px minmax(0, .9fr) minmax(0, 1fr);
+  }
+
   .auth-shell {
     padding: 16px;
   }
